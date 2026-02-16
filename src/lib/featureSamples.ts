@@ -1,0 +1,81 @@
+/** Sample strings that demonstrate each OpenType feature (off vs on). */
+export const FEATURE_SAMPLES: Record<string, string> = {
+  liga: 'fi fl ff',
+  kern: 'AV Ta We',
+  calt: 'Hamburgefonts',
+  clig: 'fi fl ff',
+  dlig: 'fi fl ff',
+  hlig: 'fi fl',
+  rlig: 'الله',
+  tnum: '0123456789',
+  onum: '0123456789',
+  lnum: '0123456789',
+  pnum: '0123456789',
+  ss01: 'Hamburgefonts',
+  ss02: 'Hamburgefonts',
+  ss03: 'Hamburgefonts',
+  ss04: 'Hamburgefonts',
+  ss05: 'Hamburgefonts',
+  ss06: 'Hamburgefonts',
+  ss07: 'Hamburgefonts',
+  ss08: 'Hamburgefonts',
+  smcp: 'Small Caps',
+  c2sc: 'SMALL CAPS',
+  pcap: 'Small Caps',
+  c2pc: 'SMALL CAPS',
+  frac: '1/2 3/4',
+  ordn: '1st 2nd 3rd',
+  sups: 'x² y³',
+  subs: 'H₂O',
+  sinf: 'Scientific',
+  swsh: 'Swash',
+  cswh: 'Swash',
+  salt: 'Alternates',
+  styl: 'Style',
+  titl: 'Titling',
+  aalt: 'All Alternates',
+  case: 'Case',
+  locl: 'Localized',
+};
+
+/** Human-readable labels for feature tags (optional). */
+export const FEATURE_LABELS: Record<string, string> = {
+  liga: 'Standard Ligatures',
+  kern: 'Kerning',
+  calt: 'Contextual Alternates',
+  clig: 'Contextual Ligatures',
+  dlig: 'Discretionary Ligatures',
+  hlig: 'Historical Ligatures',
+  rlig: 'Required Ligatures',
+  tnum: 'Tabular Figures',
+  onum: 'Oldstyle Figures',
+  lnum: 'Lining Figures',
+  pnum: 'Proportional Figures',
+  ss01: 'Stylistic Set 1',
+  ss02: 'Stylistic Set 2',
+  ss03: 'Stylistic Set 3',
+  ss04: 'Stylistic Set 4',
+  ss05: 'Stylistic Set 5',
+  ss06: 'Stylistic Set 6',
+  ss07: 'Stylistic Set 7',
+  ss08: 'Stylistic Set 8',
+  smcp: 'Small Capitals',
+  c2sc: 'All Small Caps',
+  pcap: 'Petite Capitals',
+  c2pc: 'All Petite Caps',
+  frac: 'Fractions',
+  ordn: 'Ordinals',
+  sups: 'Superscript',
+  subs: 'Subscript',
+  aalt: 'Access All Alternates',
+  case: 'Case-Sensitive',
+  locl: 'Localized Forms',
+};
+
+export function getSampleForFeature(tag: string): string {
+  return FEATURE_SAMPLES[tag] ?? tag;
+}
+
+export function getLabelForFeature(tag: string): string {
+  return FEATURE_LABELS[tag] ?? tag;
+}
