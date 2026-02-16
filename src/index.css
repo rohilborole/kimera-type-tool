@@ -15,6 +15,10 @@ body {
   background: #0a0a0b;
 }
 
+body.light-theme {
+  background: #f5f5f7;
+}
+
 /* Dark glass — Apple-style minimal panels */
 .glass-panel {
   background: rgba(28, 28, 31, 0.72);
@@ -90,6 +94,35 @@ body.light-theme .glass-button:hover {
   border-color: rgba(0, 0, 0, 0.15);
 }
 
+body.light-theme .canvas-glass {
+  background: rgba(240, 240, 242, 0.75);
+  border-color: rgba(0, 0, 0, 0.06);
+}
+
+body.light-theme .tab-glass {
+  background: rgba(255, 255, 255, 0.7);
+  border-bottom-color: rgba(0, 0, 0, 0.08);
+}
+
+body.light-theme .specimen-block {
+  border-color: rgba(0, 0, 0, 0.1);
+}
+
+body.light-theme .specimen-block-label {
+  background: rgba(0, 0, 0, 0.1);
+  color: #1d1d1f;
+}
+
+body.light-theme .specimen-block-remove {
+  border-color: rgba(0, 0, 0, 0.15);
+  background: rgba(0, 0, 0, 0.05);
+  color: #1d1d1f;
+}
+
+body.light-theme .specimen-block-remove:hover {
+  background: rgba(0, 0, 0, 0.1);
+}
+
 /* Custom scrollbars — thin, minimal */
 ::-webkit-scrollbar {
   width: 6px;
@@ -109,6 +142,14 @@ body.light-theme .glass-button:hover {
   background: rgba(255, 255, 255, 0.25);
 }
 
+body.light-theme ::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.2);
+}
+
+body.light-theme ::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.3);
+}
+
 /* Print — clean PDF export */
 @media print {
   body {
@@ -120,8 +161,23 @@ body.light-theme .glass-button:hover {
     display: none !important;
   }
 
+  .print-preview header {
+    display: none !important;
+  }
+
+  .print-preview > div:last-child {
+    overflow: visible !important;
+    padding: 0 !important;
+  }
+
+  .print-preview [class*="Page"] {
+    box-shadow: none !important;
+  }
+
   @page {
     margin: 1.5cm;
     size: A4;
   }
 }
+
+/* Injected when page size is A3 (see PrintPreview) */

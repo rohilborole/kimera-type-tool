@@ -1,5 +1,7 @@
 export type Theme = 'dark' | 'light';
 
+export type PageSize = 'A4' | 'A3';
+
 export interface FontMetadata {
   familyName: string;
   glyphCount: number;
@@ -25,6 +27,7 @@ export type ActiveTab =
   | 'A-Z'
   | 'WORDS'
   | 'CAPS'
+  | 'SPACING'
   | 'LAYOUT'
   | 'LETTERING'
   | 'KERN'
@@ -92,6 +95,7 @@ export type SpecimenBlockType =
   | 'A-Z'
   | 'WORDS'
   | 'CAPS'
+  | 'SPACING'
   | 'LAYOUT'
   | 'LETTERING'
   | 'KERN'

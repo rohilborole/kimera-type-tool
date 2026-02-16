@@ -9,6 +9,7 @@ import type {
   CurrentTextStyle,
   TextFrame,
   DrawingStroke,
+  PageSize,
 } from '../types';
 import { parseFontFile, COMMON_OPENTYPE_FEATURES } from '../lib/fontEngine';
 
@@ -33,6 +34,9 @@ export function useAppStore() {
   const [activeFeatures, setActiveFeatures] = useState<Record<string, boolean>>(initialFeatures);
   const [activeTab, setActiveTab] = useState<ActiveTab>('ALL');
   const [isPrinting, setIsPrinting] = useState(false);
+  const [isPrintPreview, setIsPrintPreview] = useState(false);
+  const [pageSize, setPageSize] = useState<PageSize>('A4');
+  const [currentPageIndex, setCurrentPageIndex] = useState(0);
   const [annotations, setAnnotations] = useState<Annotation[]>([]);
   const [axisAnimating, setAxisAnimating] = useState<Record<string, boolean>>({});
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -148,7 +152,7 @@ export function useAppStore() {
   }, []);
 
   const setZoomValue = useCallback((value: number) => {
-    setZoom((z) => Math.min(2, Math.max(0.25, value)));
+    setZoom((_z) => Math.min(2, Math.max(0.25, value)));
   }, []);
 
   const zoomIn = useCallback(() => setZoom((z) => Math.min(2, z + 0.25)), []);
@@ -168,6 +172,12 @@ export function useAppStore() {
     setActiveTab,
     isPrinting,
     setIsPrinting,
+    isPrintPreview,
+    setIsPrintPreview,
+    pageSize,
+    setPageSize,
+    currentPageIndex,
+    setCurrentPageIndex,
     annotations,
     addAnnotation,
     updateAnnotation,

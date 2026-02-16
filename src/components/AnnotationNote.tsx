@@ -22,6 +22,7 @@ export function AnnotationNote({ id, x, y, text, onUpdate, onRemove }: Annotatio
   return (
     <div
       data-annotation
+      data-id={id}
       className="absolute z-20 w-48 rounded border-2 border-amber-400 bg-amber-50 shadow-lg dark:border-amber-500 dark:bg-amber-950"
       style={{ left: x, top: y }}
     >

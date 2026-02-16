@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useState } from 'react';
 import type { CanvasTool, TextFrame as TextFrameType } from '../types';
 import { AnnotationNote } from './AnnotationNote';
 
@@ -41,8 +41,8 @@ function getContentCoords(
 
 export function CanvasOverlay({
   containerRef,
-  scrollLeft,
-  scrollTop,
+  scrollLeft: _scrollLeft,
+  scrollTop: _scrollTop,
   contentWidth,
   contentHeight,
   specimenStyle,

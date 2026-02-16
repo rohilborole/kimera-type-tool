@@ -4,6 +4,7 @@ import { useSpecimenStyle } from './hooks/useSpecimenStyle';
 import { useFontFace } from './hooks/useFontFace';
 import { Sidebar } from './components/Sidebar';
 import { Canvas } from './components/Canvas';
+import { PrintPreview } from './components/PrintPreview';
 
 export function App() {
   const {
@@ -19,6 +20,12 @@ export function App() {
     setActiveTab,
     isPrinting,
     setIsPrinting,
+    isPrintPreview,
+    setIsPrintPreview,
+    pageSize,
+    setPageSize,
+    currentPageIndex,
+    setCurrentPageIndex,
     annotations,
     addAnnotation,
     updateAnnotation,
@@ -59,8 +66,8 @@ export function App() {
   }, [effectiveTheme]);
 
   const handleExportPdf = useCallback(() => {
-    setIsPrinting(true);
-  }, [setIsPrinting]);
+    setIsPrintPreview(true);
+  }, [setIsPrintPreview]);
 
   useEffect(() => {
     if (!isPrinting) return;
@@ -71,11 +78,32 @@ export function App() {
     return () => clearTimeout(t);
   }, [isPrinting, setIsPrinting]);
 
+  if (isPrintPreview) {
+    return (
+      <PrintPreview
+        onClose={() => setIsPrintPreview(false)}
+        onPrint={() => window.print()}
+        pageSize={pageSize}
+        activeTab={activeTab}
+        specimenStyle={specimenStyle}
+        theme={theme}
+      />
+    );
+  }
+
   return (
     <div
-      className={`flex min-h-screen font-ui text-white/90 ${
+      className={`flex min-h-screen font-ui ${
         isPrinting ? 'h-auto overflow-visible bg-white text-gray-900' : 'h-screen overflow-hidden'
-      } ${!isPrinting && effectiveTheme === 'dark' ? 'bg-[#0a0a0b]' : ''} ${!isPrinting && effectiveTheme === 'light' ? 'bg-[#f5f5f7]' : ''}`}
+      } ${
+        !isPrinting && effectiveTheme === 'dark'
+          ? 'bg-[#0a0a0b] text-white/90'
+          : ''
+      } ${
+        !isPrinting && effectiveTheme === 'light'
+          ? 'bg-[#f5f5f7] text-gray-900'
+          : ''
+      }`}
     >
       {!isPrinting && (
         <Sidebar
@@ -105,6 +133,10 @@ export function App() {
         specimenStyle={specimenStyle}
         isPrinting={isPrinting}
         theme={effectiveTheme}
+        pageSize={pageSize}
+        setPageSize={setPageSize}
+        currentPageIndex={currentPageIndex}
+        setCurrentPageIndex={setCurrentPageIndex}
         annotations={annotations}
         addAnnotation={addAnnotation}
         updateAnnotation={updateAnnotation}

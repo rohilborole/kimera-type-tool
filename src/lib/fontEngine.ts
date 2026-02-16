@@ -7,7 +7,7 @@ export const LOADED_FONT_FAMILY = 'KimeraLoadedFont';
 export const COMMON_OPENTYPE_FEATURES = [
   'liga', 'kern', 'calt', 'clig', 'dlig', 'hlig', 'rlig',
   'tnum', 'onum', 'lnum', 'pnum',
-  'ss01', 'ss02', 'ss03', 'ss04', 'ss05', 'ss06', 'ss07', 'ss08',
+  'ss01', 'ss02', 'ss03', 'ss04', 'ss05', 'ss06', 'ss07', 'ss08', 'ss09', 'ss10', 'ss11',
   'smcp', 'c2sc', 'pcap', 'c2pc',
   'frac', 'ordn', 'sups', 'subs', 'sinf',
   'swsh', 'cswh', 'salt', 'styl', 'titl',
