@@ -1,4 +1,4 @@
-import type { FontMetadata, VariableAxis } from '../types';
+import type { FontMetadata, VariableAxis, GlyphInfo } from '../types';
 
 /** Internal font-family used for @font-face and all canvas text when a font is loaded */
 export const LOADED_FONT_FAMILY = 'KimeraLoadedFont';
@@ -14,9 +14,14 @@ export const COMMON_OPENTYPE_FEATURES = [
   'aalt', 'case', 'locl',
 ];
 
+interface OpentypeGlyph {
+  name?: string;
+  unicode?: number;
+}
+
 interface OpentypeFont {
   names?: { fontFamily?: { en?: string } };
-  glyphs?: { length: number };
+  glyphs?: { length: number; glyphs?: OpentypeGlyph[]; forEach?: (fn: (g: OpentypeGlyph, i: number) => void) => void };
   tables?: {
     fvar?: {
       axes: Array<{ tag: string; minValue: number; maxValue: number; defaultValue: number; name?: { en?: string } }>;
@@ -50,11 +55,39 @@ function getFeatureTagsFromGsub(gsub: unknown): string[] {
   return Array.from(tags);
 }
 
+function extractGlyphs(font: OpentypeFont): GlyphInfo[] {
+  const glyphs: GlyphInfo[] = [];
+  const gl = font.glyphs;
+  if (!gl) return glyphs;
+  const len = gl.length ?? 0;
+  const arr = (gl as { glyphs?: OpentypeGlyph[] }).glyphs;
+  if (Array.isArray(arr)) {
+    arr.forEach((g, i) => {
+      glyphs.push({
+        name: g?.name ?? `.notdef`,
+        unicode: g?.unicode ?? 0,
+        index: i,
+      });
+    });
+  } else {
+    for (let i = 0; i < len; i++) {
+      const g = (gl as unknown as { get?: (i: number) => OpentypeGlyph }).get?.(i) ?? (gl as unknown as OpentypeGlyph[])[i];
+      glyphs.push({
+        name: (g as OpentypeGlyph)?.name ?? `.notdef`,
+        unicode: (g as OpentypeGlyph)?.unicode ?? 0,
+        index: i,
+      });
+    }
+  }
+  return glyphs;
+}
+
 function extractFromFont(font: OpentypeFont): {
   familyName: string;
   glyphCount: number;
   axes: VariableAxis[];
   featureTags: string[];
+  glyphs: GlyphInfo[];
 } {
   const familyName =
     (font.names?.fontFamily as { en?: string } | undefined)?.en ??
@@ -78,7 +111,8 @@ function extractFromFont(font: OpentypeFont): {
   }
   const fromGsub = getFeatureTagsFromGsub(font.tables?.gsub);
   const featureTags = fromGsub.length > 0 ? fromGsub : [...COMMON_OPENTYPE_FEATURES];
-  return { familyName, glyphCount, axes, featureTags };
+  const glyphs = extractGlyphs(font);
+  return { familyName, glyphCount, axes, featureTags, glyphs };
 }
 
 const PARSE_TIMEOUT_MS = 4000;
@@ -88,6 +122,7 @@ function parseWithOpentype(buffer: ArrayBuffer): Promise<{
   glyphCount: number;
   axes: VariableAxis[];
   featureTags: string[];
+  glyphs: GlyphInfo[];
 } | null> {
   const opentypeLib = (window as unknown as {
     opentype?: {
@@ -131,6 +166,7 @@ export async function parseFontFile(file: File): Promise<{
   metadata: FontMetadata;
   axes: VariableAxis[];
   featureTags: string[];
+  glyphs: GlyphInfo[];
 }> {
   const buffer = await file.arrayBuffer();
   const blob = new Blob([buffer], { type: file.type || 'font/otf' });
@@ -150,8 +186,9 @@ export async function parseFontFile(file: File): Promise<{
   };
   const axes = parsed?.axes ?? [];
   const featureTags = (parsed?.featureTags?.length ? parsed.featureTags : COMMON_OPENTYPE_FEATURES) as string[];
+  const glyphs = parsed?.glyphs ?? [];
 
-  return { blobUrl, metadata, axes, featureTags };
+  return { blobUrl, metadata, axes, featureTags, glyphs };
 }
 
 export function buildFontVariationSettings(axes: VariableAxis[]): string {

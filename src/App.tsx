@@ -12,6 +12,7 @@ export function App() {
     setTheme,
     fontUrl,
     metadata,
+    glyphs,
     axes,
     setAxisValue,
     activeFeatures,
@@ -24,8 +25,20 @@ export function App() {
     setIsPrintPreview,
     pageSize,
     setPageSize,
+    pageOrientation,
+    setPageOrientation,
     currentPageIndex,
     setCurrentPageIndex,
+    proofingBlocks,
+    activeProofingBlockId,
+    proofingSyncText,
+    setActiveProofingBlockId,
+    setProofingSyncText,
+    addProofingBlock,
+    updateProofingBlock,
+    removeProofingBlock,
+    duplicateProofingBlock,
+    syncAllProofingBlocksText,
     annotations,
     addAnnotation,
     updateAnnotation,
@@ -84,9 +97,12 @@ export function App() {
         onClose={() => setIsPrintPreview(false)}
         onPrint={() => window.print()}
         pageSize={pageSize}
+        pageOrientation={pageOrientation}
         activeTab={activeTab}
         specimenStyle={specimenStyle}
         theme={theme}
+        fontUrl={fontUrl}
+        fontFileType={metadata?.fileType}
       />
     );
   }
@@ -131,12 +147,28 @@ export function App() {
         activeTab={activeTab}
         setActiveTab={setActiveTab}
         specimenStyle={specimenStyle}
+        fontUrl={fontUrl}
+        axes={axes}
+        activeFeatures={activeFeatures}
         isPrinting={isPrinting}
         theme={effectiveTheme}
         pageSize={pageSize}
         setPageSize={setPageSize}
+        pageOrientation={pageOrientation}
+        setPageOrientation={setPageOrientation}
         currentPageIndex={currentPageIndex}
         setCurrentPageIndex={setCurrentPageIndex}
+        glyphs={glyphs}
+        proofingBlocks={proofingBlocks}
+        activeProofingBlockId={activeProofingBlockId}
+        proofingSyncText={proofingSyncText}
+        setActiveProofingBlockId={setActiveProofingBlockId}
+        setProofingSyncText={setProofingSyncText}
+        addProofingBlock={addProofingBlock}
+        updateProofingBlock={updateProofingBlock}
+        removeProofingBlock={removeProofingBlock}
+        duplicateProofingBlock={duplicateProofingBlock}
+        syncAllProofingBlocksText={syncAllProofingBlocksText}
         annotations={annotations}
         addAnnotation={addAnnotation}
         updateAnnotation={updateAnnotation}

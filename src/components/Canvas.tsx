@@ -1,14 +1,14 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import type { ActiveTab, PageSize } from '../types';
-import {
-  getCurrentPageBlocks,
-  getTotalPages,
-} from '../lib/specimenPagination';
+import type { ActiveTab, PageSize, PageOrientation } from '../types';
+import { getSpecimenPages } from '../lib/specimenPagination';
+import { getPageDimensions } from '../lib/pageDimensions';
 import { SpecimenBlocks } from './SpecimenBlocks';
 import { FloatingToolbar } from './FloatingToolbar';
 import { CanvasOverlay } from './CanvasOverlay';
+import { GlyphInspectorView } from './GlyphInspectorView';
+import { TypeProofingView } from './TypeProofingView';
 
-/** Tab order aligned with proof: Family → Character → Spacing → Words → Specimen → OT. */
+/** Tab order: specimen tabs first, then Glyph Inspector and Type Proofing. */
 const TABS: ActiveTab[] = [
   'ALL',
   'HEADLINES',
@@ -24,21 +24,23 @@ const TABS: ActiveTab[] = [
   'HINTING',
   'LATIN',
   'WORLD',
+  'GLYPH_INSPECTOR',
+  'TYPE_PROOFING',
 ];
-
-const PAGE_DIMENSIONS: Record<PageSize, { width: string; height: string }> = {
-  A4: { width: '210mm', height: '297mm' },
-  A3: { width: '297mm', height: '420mm' },
-};
 
 interface CanvasProps {
   activeTab: ActiveTab;
   setActiveTab: (t: ActiveTab) => void;
   specimenStyle: React.CSSProperties;
+  fontUrl: string | null;
+  axes: import('../types').VariableAxis[];
+  activeFeatures: Record<string, boolean>;
   isPrinting: boolean;
   theme: 'dark' | 'light';
   pageSize: PageSize;
   setPageSize: (s: PageSize) => void;
+  pageOrientation: PageOrientation;
+  setPageOrientation: (o: PageOrientation) => void;
   currentPageIndex: number;
   setCurrentPageIndex: (n: number) => void;
   annotations: { id: string; x: number; y: number; text: string }[];
@@ -61,18 +63,34 @@ interface CanvasProps {
   addDrawingStroke: (points: { x: number; y: number }[]) => void;
   selectedElementId: string | null;
   setSelectedElementId: (id: string | null) => void;
+  glyphs: import('../types').GlyphInfo[];
+  proofingBlocks: import('../types').ProofingBlock[];
+  activeProofingBlockId: string | null;
+  proofingSyncText: boolean;
+  setActiveProofingBlockId: (id: string | null) => void;
+  setProofingSyncText: (v: boolean) => void;
+  addProofingBlock: (initialText?: string) => string;
+  updateProofingBlock: (id: string, updates: Partial<Pick<import('../types').ProofingBlock, 'text' | 'fontVariationSettings' | 'fontFeatureSettings' | 'axisOverrides' | 'featureOverrides'>>) => void;
+  removeProofingBlock: (id: string) => void;
+  duplicateProofingBlock: (id: string) => void;
+  syncAllProofingBlocksText: (text: string) => void;
 }
 
 export function Canvas({
   activeTab,
   setActiveTab,
   specimenStyle,
+  fontUrl,
+  axes,
+  activeFeatures,
   isPrinting,
   theme,
   pageSize,
   setPageSize,
-  currentPageIndex,
-  setCurrentPageIndex,
+  pageOrientation,
+  setPageOrientation,
+  currentPageIndex: _currentPageIndex,
+  setCurrentPageIndex: _setCurrentPageIndex,
   annotations,
   addAnnotation,
   updateAnnotation,
@@ -93,54 +111,55 @@ export function Canvas({
   addDrawingStroke,
   selectedElementId,
   setSelectedElementId,
+  glyphs,
+  proofingBlocks,
+  activeProofingBlockId,
+  proofingSyncText,
+  setActiveProofingBlockId,
+  setProofingSyncText,
+  addProofingBlock,
+  updateProofingBlock,
+  removeProofingBlock,
+  duplicateProofingBlock,
+  syncAllProofingBlocksText,
 }: CanvasProps) {
-  const pageContainerRef = useRef<HTMLDivElement>(null);
-  const pageContentAreaRef = useRef<HTMLDivElement>(null);
-  const pageContentInnerRef = useRef<HTMLDivElement>(null);
+  const firstPageContainerRef = useRef<HTMLDivElement>(null);
   const [contentWidth, setContentWidth] = useState(0);
   const [contentHeight, setContentHeight] = useState(0);
-  const [scaleFactor, setScaleFactor] = useState(1);
 
-  const totalPages = getTotalPages(activeTab, pageSize);
-  const currentPageBlocks = getCurrentPageBlocks(activeTab, pageSize, currentPageIndex);
-  const safePageIndex = Math.max(0, Math.min(currentPageIndex, totalPages - 1));
+  const isSpecimenTab =
+    activeTab !== 'GLYPH_INSPECTOR' && activeTab !== 'TYPE_PROOFING';
+  const pages = getSpecimenPages(activeTab, pageSize);
+
+  const handleAddToProofing = useCallback(
+    (char: string) => {
+      if (proofingBlocks.length === 0) addProofingBlock(char);
+      else if (activeProofingBlockId) {
+        const block = proofingBlocks.find((b) => b.id === activeProofingBlockId);
+        if (block) updateProofingBlock(block.id, { text: block.text + char });
+        else updateProofingBlock(proofingBlocks[0].id, { text: proofingBlocks[0].text + char });
+      } else {
+        updateProofingBlock(proofingBlocks[0].id, { text: proofingBlocks[0].text + char });
+      }
+    },
+    [proofingBlocks, activeProofingBlockId, addProofingBlock, updateProofingBlock]
+  );
 
   useEffect(() => {
-    if (currentPageIndex !== safePageIndex) setCurrentPageIndex(safePageIndex);
-  }, [currentPageIndex, safePageIndex, setCurrentPageIndex]);
-
-  const updatePageSize = useCallback(() => {
-    const el = pageContainerRef.current;
+    const el = firstPageContainerRef.current;
     if (!el) return;
-    setContentWidth(el.offsetWidth);
-    setContentHeight(el.offsetHeight);
-  }, []);
-
-  useEffect(() => {
-    const el = pageContainerRef.current;
-    if (!el) return;
-    updatePageSize();
-    const ro = new ResizeObserver(updatePageSize);
+    const update = () => {
+      setContentWidth(el.offsetWidth);
+      setContentHeight(el.offsetHeight);
+    };
+    update();
+    const ro = new ResizeObserver(update);
     ro.observe(el);
     return () => ro.disconnect();
-  }, [updatePageSize, currentPageBlocks]);
-
-  useEffect(() => {
-    const area = pageContentAreaRef.current;
-    const inner = pageContentInnerRef.current;
-    if (!area || !inner) return;
-    const available = area.clientHeight;
-    const natural = inner.scrollHeight;
-    if (natural > 0 && available > 0) {
-      const scale = Math.min(1, available / natural);
-      setScaleFactor(scale);
-    } else {
-      setScaleFactor(1);
-    }
-  }, [currentPageBlocks, contentHeight]);
+  }, [pages.length]);
 
   const showTextControls = activeTool === 'type' || (activeTool === 'cursor' && !!selectedElementId);
-  const dims = PAGE_DIMENSIONS[pageSize];
+  const dims = getPageDimensions(pageSize, pageOrientation);
 
   return (
     <div
@@ -179,114 +198,152 @@ export function Canvas({
               </button>
             ))}
           </div>
-          <div
-            className={`flex items-center gap-2 border-l pl-2 ${
-              theme === 'light' ? 'border-black/10' : 'border-white/10'
-            }`}
-          >
-            <select
-              value={pageSize}
-              onChange={(e) => setPageSize(e.target.value as PageSize)}
-              className={
-                theme === 'light'
-                  ? 'rounded border border-black/15 bg-black/5 px-2 py-1.5 text-xs font-ui text-gray-900'
-                  : 'rounded border border-white/15 bg-white/5 px-2 py-1.5 text-xs font-ui'
-              }
+          {isSpecimenTab && (
+            <div
+              className={`flex items-center gap-2 border-l pl-2 ${
+                theme === 'light' ? 'border-black/10' : 'border-white/10'
+              }`}
             >
-              <option value="A4">A4</option>
-              <option value="A3">A3</option>
-            </select>
-            <span className={`text-xs font-ui ${theme === 'light' ? 'text-gray-600' : 'text-white/70'}`}>
-              Page {safePageIndex + 1} of {totalPages}
-            </span>
-            <button
-              type="button"
-              onClick={() => setCurrentPageIndex(Math.max(0, safePageIndex - 1))}
-              disabled={safePageIndex <= 0}
-              className={
-                theme === 'light'
-                  ? 'rounded border border-black/15 bg-black/5 px-2 py-1 text-xs text-gray-900 disabled:opacity-50'
-                  : 'rounded border border-white/15 bg-white/5 px-2 py-1 text-xs disabled:opacity-50'
-              }
-            >
-              Prev
-            </button>
-            <button
-              type="button"
-              onClick={() => setCurrentPageIndex(Math.min(totalPages - 1, safePageIndex + 1))}
-              disabled={safePageIndex >= totalPages - 1}
-              className={
-                theme === 'light'
-                  ? 'rounded border border-black/15 bg-black/5 px-2 py-1 text-xs text-gray-900 disabled:opacity-50'
-                  : 'rounded border border-white/15 bg-white/5 px-2 py-1 text-xs disabled:opacity-50'
-              }
-            >
-              Next
-            </button>
-          </div>
+              <select
+                value={pageOrientation}
+                onChange={(e) => setPageOrientation(e.target.value as PageOrientation)}
+                className={
+                  theme === 'light'
+                    ? 'rounded border border-black/15 bg-black/5 px-2 py-1.5 text-xs font-ui text-gray-900'
+                    : 'rounded border border-white/15 bg-white/5 px-2 py-1.5 text-xs font-ui'
+                }
+              >
+                <option value="landscape">Landscape</option>
+                <option value="portrait">Portrait</option>
+              </select>
+              <select
+                value={pageSize}
+                onChange={(e) => setPageSize(e.target.value as PageSize)}
+                className={
+                  theme === 'light'
+                    ? 'rounded border border-black/15 bg-black/5 px-2 py-1.5 text-xs font-ui text-gray-900'
+                    : 'rounded border border-white/15 bg-white/5 px-2 py-1.5 text-xs font-ui'
+                }
+              >
+                <option value="A4">A4</option>
+                <option value="A3">A3</option>
+              </select>
+              <span className={`text-xs font-ui ${theme === 'light' ? 'text-gray-600' : 'text-white/70'}`}>
+                {pages.length} page{pages.length !== 1 ? 's' : ''}
+              </span>
+            </div>
+          )}
         </nav>
       )}
 
-      <main className="relative flex flex-1 items-start justify-center overflow-auto p-6">
-        <div
-          ref={pageContainerRef}
-          className={`relative flex flex-col shadow-lg ${theme === 'light' ? 'bg-white' : 'bg-gray-900'}`}
-          style={{
-            width: dims.width,
-            height: dims.height,
-            maxWidth: '100%',
-          }}
-        >
-          <div
-            ref={pageContentAreaRef}
-            className="relative flex-1 overflow-hidden p-6"
-          >
-            <div
-              ref={pageContentInnerRef}
-              className="absolute left-6 top-6 w-[calc(100%-3rem)] origin-top-left"
-              style={{
-                transform: `scale(${scaleFactor})`,
-              }}
-            >
-              <SpecimenBlocks
-                activeTab={activeTab}
-                specimenStyle={specimenStyle}
-                isPrinting={isPrinting}
-                blockTypesToShow={currentPageBlocks}
-              />
-            </div>
-            {scaleFactor < 1 && (
-              <div className={`absolute bottom-2 left-6 text-xs ${theme === 'light' ? 'text-gray-500' : 'text-gray-400'}`}>
-                Scaled to fit
+      <main className="relative flex flex-1 flex-col overflow-auto p-6">
+        {activeTab === 'GLYPH_INSPECTOR' && (
+          <GlyphInspectorView
+            glyphs={glyphs}
+            fontFamily={specimenStyle.fontFamily ?? ''}
+            theme={theme}
+            onAddToProofing={handleAddToProofing}
+          />
+        )}
+        {activeTab === 'TYPE_PROOFING' && (
+          <TypeProofingView
+            fontUrl={fontUrl}
+            proofingBlocks={proofingBlocks}
+            activeProofingBlockId={activeProofingBlockId}
+            proofingSyncText={proofingSyncText}
+            axes={axes}
+            activeFeatures={activeFeatures}
+            theme={theme}
+            setActiveProofingBlockId={setActiveProofingBlockId}
+            addProofingBlock={addProofingBlock}
+            updateProofingBlock={updateProofingBlock}
+            removeProofingBlock={removeProofingBlock}
+            duplicateProofingBlock={duplicateProofingBlock}
+            setProofingSyncText={setProofingSyncText}
+            syncAllProofingBlocksText={syncAllProofingBlocksText}
+          />
+        )}
+        {isSpecimenTab && (
+        <div className="mx-auto flex w-full max-w-full flex-col items-center gap-0">
+          {pages.map((pageBlocks, pageIndex) => (
+            <div key={pageIndex} className="flex flex-col items-center">
+              {/* Page label above each page for clear pagination */}
+              <div
+                className={`font-ui mb-2 text-xs uppercase tracking-widest ${
+                  theme === 'light' ? 'text-gray-400' : 'text-white/50'
+                }`}
+              >
+                Page {pageIndex + 1}
               </div>
-            )}
-          </div>
-
-          {!isPrinting && (
-            <CanvasOverlay
-              containerRef={pageContainerRef}
-              scrollLeft={0}
-              scrollTop={0}
-              contentWidth={contentWidth}
-              contentHeight={contentHeight}
-              specimenStyle={specimenStyle}
-              activeTool={activeTool}
-              textFrames={textFrames}
-              drawings={drawings}
-              annotations={annotations}
-              addAnnotation={addAnnotation}
-              updateAnnotation={updateAnnotation}
-              removeAnnotation={removeAnnotation}
-              addTextFrame={addTextFrame}
-              updateTextFrame={updateTextFrame}
-              removeTextFrame={removeTextFrame}
-              addDrawingStroke={addDrawingStroke}
-              selectedElementId={selectedElementId}
-              setSelectedElementId={setSelectedElementId}
-              isPrinting={isPrinting}
-            />
-          )}
+              <div
+                ref={pageIndex === 0 ? firstPageContainerRef : undefined}
+                className={`relative flex min-h-0 flex-col ${
+                  theme === 'light'
+                    ? 'border border-black/10 bg-white shadow-xl'
+                    : 'border border-white/10 bg-[#141414] shadow-xl shadow-black/30'
+                }`}
+                style={{
+                  width: dims.width,
+                  minHeight: dims.height,
+                  maxWidth: '100%',
+                }}
+              >
+                <div className="relative flex flex-1 flex-col overflow-visible p-6">
+                  <div className="min-w-0 flex-1">
+                    <SpecimenBlocks
+                      activeTab={activeTab}
+                      specimenStyle={specimenStyle}
+                      isPrinting={isPrinting}
+                      blockTypesToShow={pageBlocks}
+                    />
+                  </div>
+                </div>
+                {!isPrinting && pageIndex === 0 && (
+                  <CanvasOverlay
+                    containerRef={firstPageContainerRef}
+                    scrollLeft={0}
+                    scrollTop={0}
+                    contentWidth={contentWidth}
+                    contentHeight={contentHeight}
+                    specimenStyle={specimenStyle}
+                    activeTool={activeTool}
+                    textFrames={textFrames}
+                    drawings={drawings}
+                    annotations={annotations}
+                    addAnnotation={addAnnotation}
+                    updateAnnotation={updateAnnotation}
+                    removeAnnotation={removeAnnotation}
+                    addTextFrame={addTextFrame}
+                    updateTextFrame={updateTextFrame}
+                    removeTextFrame={removeTextFrame}
+                    addDrawingStroke={addDrawingStroke}
+                    selectedElementId={selectedElementId}
+                    setSelectedElementId={setSelectedElementId}
+                    isPrinting={isPrinting}
+                  />
+                )}
+              </div>
+              {/* Pagination separator between pages */}
+              {pageIndex < pages.length - 1 && (
+                <div
+                  className={`mt-4 flex w-full items-center justify-center border-t pt-4 ${
+                    theme === 'light' ? 'border-black/10' : 'border-white/10'
+                  }`}
+                  style={{ width: dims.width, maxWidth: '100%' }}
+                >
+                  <span
+                    className={`font-ui text-xs uppercase tracking-widest ${
+                      theme === 'light' ? 'text-gray-400' : 'text-white/50'
+                    }`}
+                  >
+                    — Page {pageIndex + 2} —
+                  </span>
+                </div>
+              )}
+            </div>
+          ))}
         </div>
+        )}
       </main>
     </div>
   );

@@ -2,6 +2,8 @@ export type Theme = 'dark' | 'light';
 
 export type PageSize = 'A4' | 'A3';
 
+export type PageOrientation = 'landscape' | 'portrait';
+
 export interface FontMetadata {
   familyName: string;
   glyphCount: number;
@@ -33,7 +35,9 @@ export type ActiveTab =
   | 'KERN'
   | 'HINTING'
   | 'LATIN'
-  | 'WORLD';
+  | 'WORLD'
+  | 'GLYPH_INSPECTOR'
+  | 'TYPE_PROOFING';
 
 export type CanvasTool = 'cursor' | 'type' | 'draw' | 'notes';
 
@@ -60,6 +64,24 @@ export interface TextFrame {
 export interface DrawingStroke {
   id: string;
   points: { x: number; y: number }[];
+}
+
+/** Single block in the Type Proofing playground; owns its own variation/feature settings and text. */
+export interface ProofingBlock {
+  id: string;
+  text: string;
+  fontVariationSettings: string;
+  fontFeatureSettings: string;
+  /** Axis overrides for variable fonts: tag -> value */
+  axisOverrides: Record<string, number>;
+  /** Feature toggles for this block */
+  featureOverrides: Record<string, boolean>;
+}
+
+export interface GlyphInfo {
+  name: string;
+  unicode: number;
+  index: number;
 }
 
 export interface AppState {

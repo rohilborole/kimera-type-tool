@@ -20,8 +20,21 @@ import {
   SPACING_NUMERALS_UC,
   SPACING_NUMERALS_HH,
   WORDS_AZ,
+  KERNING_CLASSIC,
+  INCIDENTALS_LETTER_PUNCT,
+  INCIDENTALS_EXCLAM_QUEST,
 } from '../content-presets';
 import { SpecimenBlock } from './SpecimenBlock';
+
+/** Design system: consistent section headings and size labels across all blocks. */
+const SECTION_HEADING =
+  'font-ui mb-4 text-xs uppercase tracking-wider opacity-70';
+const SUBSECTION_HEADING =
+  'font-ui mb-2 text-xs uppercase tracking-wider opacity-70';
+/** Fixed-width size column so all rows align; use with ROW for label + content. */
+const SIZE_LABEL =
+  'font-ui w-20 shrink-0 text-right text-xs tabular-nums opacity-70';
+const ROW = 'flex gap-4 items-start';
 
 const TAB_TO_BLOCKS: Record<ActiveTab, SpecimenBlockType[] | 'ALL'> = {
   ALL: 'ALL',
@@ -38,6 +51,8 @@ const TAB_TO_BLOCKS: Record<ActiveTab, SpecimenBlockType[] | 'ALL'> = {
   HINTING: ['HINTING'],
   LATIN: ['TEXT', 'A-Z'],
   WORLD: ['WORLD'],
+  GLYPH_INSPECTOR: [],
+  TYPE_PROOFING: [],
 };
 
 interface SpecimenBlocksProps {
@@ -159,9 +174,9 @@ function HeadlinesBlock({ style }: { style: React.CSSProperties }) {
   return (
     <div className="space-y-3">
       {HEADLINE_SIZES_PT.slice(0, 6).map((pt, i) => (
-        <div key={pt} className="flex gap-4 items-baseline">
-          <span className="font-ui shrink-0 text-xs opacity-70">{pt} pt</span>
-          <div style={{ ...style, fontSize: `${pt}pt` }} className="leading-tight">
+        <div key={pt} className={ROW}>
+          <span className={SIZE_LABEL}>{pt} pt</span>
+          <div style={{ ...style, fontSize: `${pt}pt` }} className="min-w-0 flex-1 leading-tight">
             {HEADLINE_SENTENCES[i % HEADLINE_SENTENCES.length] ?? PARAGRAPHS.germanSpecimen.slice(0, 60) + '…'}
           </div>
         </div>
@@ -176,16 +191,14 @@ function TextBlock({ style }: { style: React.CSSProperties }) {
   return (
     <div className="space-y-6">
       <div>
-        <h3 className="font-ui mb-4 text-xs uppercase tracking-wider opacity-70">Regular Specimen / Waterfall</h3>
+        <h3 className={SECTION_HEADING}>Regular Specimen / Waterfall</h3>
         <div className="space-y-4">
           {WATERFALL_SIZES_PT.map((pt) => (
-            <div key={pt} className="flex gap-4 border-b border-current/10 pb-4 last:border-0">
-              <span className="font-ui shrink-0 text-xs opacity-70" style={{ width: '4rem' }}>
-                {pt} pt
-              </span>
+            <div key={pt} className={`${ROW} border-b border-current/10 pb-4 last:border-0`}>
+              <span className={SIZE_LABEL}>{pt} pt</span>
               <p
                 style={{ ...style, fontSize: `${pt}pt` }}
-                className="max-w-prose leading-relaxed"
+                className="min-w-0 flex-1 max-w-prose leading-relaxed"
               >
                 {PARAGRAPHS.germanSpecimen}
               </p>
@@ -194,18 +207,17 @@ function TextBlock({ style }: { style: React.CSSProperties }) {
         </div>
       </div>
       <div>
-        <h3 className="font-ui mb-4 text-xs uppercase tracking-wider opacity-70">Paragraphs</h3>
+        <h3 className={SECTION_HEADING}>Paragraphs</h3>
         <div className="space-y-6">
           {[
             { size: 12, text: PARAGRAPHS.short },
             { size: 14, text: PARAGRAPHS.typography },
             { size: 16, text: PARAGRAPHS.kafka },
+            { size: 14, text: PARAGRAPHS.ruder },
           ].map(({ size, text }, i) => (
-            <div key={i} className="flex gap-6 border-b border-current/10 pb-6 last:border-0">
-              <span className="font-ui shrink-0 text-xs opacity-70" style={{ width: '3rem' }}>
-                {size}px
-              </span>
-              <p style={{ ...style, fontSize: size }} className="max-w-prose leading-relaxed">
+            <div key={i} className={`${ROW} border-b border-current/10 pb-6 last:border-0`}>
+              <span className={SIZE_LABEL}>{size} px</span>
+              <p style={{ ...style, fontSize: size }} className="min-w-0 flex-1 max-w-prose leading-relaxed">
                 {text}
               </p>
             </div>
@@ -219,6 +231,7 @@ function TextBlock({ style }: { style: React.CSSProperties }) {
 function AdhesionBlock({ style }: { style: React.CSSProperties }) {
   return (
     <div className="space-y-4" style={{ ...style, fontSize: '14pt' }}>
+      <h3 className={SECTION_HEADING}>Adhesion</h3>
       <div className="space-y-1 font-mono text-[11pt]" style={style}>
         <div className="flex flex-wrap gap-x-8">
           {Array(5)
@@ -249,14 +262,39 @@ function AdhesionBlock({ style }: { style: React.CSSProperties }) {
 }
 
 function KernBlock({ style }: { style: React.CSSProperties }) {
-  const pairs = ['nn oo HH OO', 'AV Ta P.', 'Te Ty We'];
   return (
-    <div className="space-y-4" style={{ ...style, fontSize: 32 }}>
-      {pairs.map((s, i) => (
-        <div key={i} contentEditable suppressContentEditableWarning className="outline-none">
-          {s}
+    <div className="space-y-6" style={{ ...style, fontSize: 32 }}>
+      <h3 className={SECTION_HEADING}>Kerning & incidentals</h3>
+      <div>
+        <h4 className={SUBSECTION_HEADING}>Classic pairs</h4>
+        <div className="mt-2 flex flex-wrap gap-x-6 gap-y-2">
+          {KERNING_CLASSIC.map((line, i) => (
+            <div key={i} contentEditable suppressContentEditableWarning className="outline-none">
+              {line}
+            </div>
+          ))}
         </div>
-      ))}
+      </div>
+      <div>
+        <h4 className={SUBSECTION_HEADING}>Incidentals: letter + punctuation</h4>
+        <div className="mt-2 flex flex-wrap gap-x-6 gap-y-2">
+          {INCIDENTALS_LETTER_PUNCT.map((line, i) => (
+            <div key={i} contentEditable suppressContentEditableWarning className="outline-none">
+              {line}
+            </div>
+          ))}
+        </div>
+      </div>
+      <div>
+        <h4 className={SUBSECTION_HEADING}>Incidentals: w! w? guillemots</h4>
+        <div className="mt-2 flex flex-wrap gap-x-6 gap-y-2">
+          {INCIDENTALS_EXCLAM_QUEST.map((line, i) => (
+            <div key={i} contentEditable suppressContentEditableWarning className="outline-none">
+              {line}
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }
@@ -268,7 +306,7 @@ function AZBlock({ style }: { style: React.CSSProperties }) {
   return (
     <div className="space-y-8">
       <div>
-        <h3 className="font-ui mb-3 text-xs uppercase tracking-wider opacity-70">Character Overview</h3>
+        <h3 className={SECTION_HEADING}>Character Overview</h3>
         <div className="space-y-2" style={{ ...style, fontSize: charSize, lineHeight: 1.3 }}>
           <div>{CHARS_UC_LINE1}</div>
           <div>{CHARS_UC_LINE2}</div>
@@ -284,25 +322,25 @@ function AZBlock({ style }: { style: React.CSSProperties }) {
         </div>
       </div>
       <div>
-        <h3 className="font-ui mb-4 text-xs uppercase tracking-wider opacity-70">Pangram</h3>
+        <h3 className={SECTION_HEADING}>Pangram</h3>
         <div className="space-y-2" style={{ lineHeight: 1.1 }}>
           {pangramSizes.map((size, i) => (
-            <div key={i} className="flex gap-4">
-              <span className="font-ui w-12 shrink-0 text-xs opacity-70">{size}px</span>
-              <span style={{ ...style, fontSize: size }}>{PANGRAMS[i % PANGRAMS.length]}</span>
+            <div key={i} className={ROW}>
+              <span className={SIZE_LABEL}>{size} pt</span>
+              <span style={{ ...style, fontSize: size }} className="min-w-0 flex-1">{PANGRAMS[i % PANGRAMS.length]}</span>
             </div>
           ))}
         </div>
       </div>
       <div>
-        <h3 className="font-ui mb-4 text-xs uppercase tracking-wider opacity-70">Density</h3>
+        <h3 className={SECTION_HEADING}>Density</h3>
         <div className="space-y-2" style={{ lineHeight: 1.4 }}>
           {densitySizes.map((size, i) => (
-            <div key={i} className="flex gap-4">
-              <span className="font-ui w-12 shrink-0 text-xs opacity-70">{size}px</span>
+            <div key={i} className={ROW}>
+              <span className={SIZE_LABEL}>{size} pt</span>
               <p
                 style={{ ...style, fontSize: size }}
-                className="flex-1 text-justify"
+                className="min-w-0 flex-1 text-justify"
               >
                 {PARAGRAPHS.kafka}
               </p>
@@ -319,10 +357,10 @@ function WordsBlock({ style }: { style: React.CSSProperties }) {
   const lToZ = WORDS_AZ.filter((w) => w[0].toUpperCase() >= 'L' && w[0].toUpperCase() <= 'Z');
   return (
     <div className="space-y-4" style={{ ...style, fontSize: '11pt' }}>
-      <h3 className="font-ui text-xs uppercase tracking-wider opacity-70">UC – LC Pairing</h3>
+      <h3 className={SECTION_HEADING}>UC – LC Pairing</h3>
       <div className="grid grid-cols-2 gap-x-12 gap-y-1 leading-relaxed">
         <div>
-          <div className="font-ui mb-2 text-xs font-medium opacity-80">A – K</div>
+          <div className={SUBSECTION_HEADING}>A – K</div>
           <div className="flex flex-wrap gap-x-3 gap-y-0.5">
             {aToK.map((word, i) => (
               <span key={i}>{word}</span>
@@ -330,7 +368,7 @@ function WordsBlock({ style }: { style: React.CSSProperties }) {
           </div>
         </div>
         <div>
-          <div className="font-ui mb-2 text-xs font-medium opacity-80">L – Z</div>
+          <div className={SUBSECTION_HEADING}>L – Z</div>
           <div className="flex flex-wrap gap-x-3 gap-y-0.5">
             {lToZ.map((word, i) => (
               <span key={i}>{word}</span>
@@ -344,9 +382,12 @@ function WordsBlock({ style }: { style: React.CSSProperties }) {
 
 function CapsBlock({ style }: { style: React.CSSProperties }) {
   return (
-    <div className="space-y-2" style={{ ...style, fontSize: '14pt' }}>
-      <div>{CHARS_UC_LINE1}</div>
-      <div>{CHARS_UC_LINE2}</div>
+    <div>
+      <h3 className={SECTION_HEADING}>Uppercase</h3>
+      <div className="space-y-2" style={{ ...style, fontSize: '14pt' }}>
+        <div>{CHARS_UC_LINE1}</div>
+        <div>{CHARS_UC_LINE2}</div>
+      </div>
     </div>
   );
 }
@@ -356,7 +397,7 @@ function SpacingBlock({ style }: { style: React.CSSProperties }) {
   return (
     <div className="space-y-6 font-mono" style={{ ...style, fontSize: pt }}>
       <div>
-        <h3 className="font-ui mb-2 text-xs uppercase tracking-wider opacity-70">Lowercase</h3>
+        <h3 className={SECTION_HEADING}>Spacing: lowercase (nn/oo)</h3>
         <div className="space-y-0.5 leading-tight">
           {SPACING_LC.map((line, i) => (
             <div key={i}>{line}</div>
@@ -364,7 +405,7 @@ function SpacingBlock({ style }: { style: React.CSSProperties }) {
         </div>
       </div>
       <div>
-        <h3 className="font-ui mb-2 text-xs uppercase tracking-wider opacity-70">Uppercase</h3>
+        <h3 className={SECTION_HEADING}>Spacing: uppercase (HH/OO)</h3>
         <div className="space-y-0.5 leading-tight">
           {SPACING_UC.map((line, i) => (
             <div key={i}>{line}</div>
@@ -372,7 +413,7 @@ function SpacingBlock({ style }: { style: React.CSSProperties }) {
         </div>
       </div>
       <div>
-        <h3 className="font-ui mb-2 text-xs uppercase tracking-wider opacity-70">With punctuation</h3>
+        <h3 className={SECTION_HEADING}>Spacing: punctuation</h3>
         <div className="grid grid-cols-2 gap-x-8 gap-y-1 leading-tight">
           <div>
             {SPACING_PUNCT_LC.map((line, i) => (
@@ -387,7 +428,7 @@ function SpacingBlock({ style }: { style: React.CSSProperties }) {
         </div>
       </div>
       <div>
-        <h3 className="font-ui mb-2 text-xs uppercase tracking-wider opacity-70">Numerals</h3>
+        <h3 className={SECTION_HEADING}>Spacing: numerals</h3>
         <div className="space-y-1 leading-tight">
           {SPACING_NUMERALS_LC.map((line, i) => (
             <div key={i}>{line}</div>
@@ -410,10 +451,11 @@ function HintingBlock({ style }: { style: React.CSSProperties }) {
   const line = 'The quick brown fox jumps over the lazy dog.';
   return (
     <div className="space-y-0.5 font-mono text-left">
+      <h3 className={SECTION_HEADING}>Size run</h3>
       {HINTING_SIZES_PT.map((pt) => (
-        <div key={pt} className="flex gap-4 items-baseline">
-          <span className="font-ui shrink-0 text-xs opacity-70">{pt} pt</span>
-          <span style={{ ...style, fontSize: `${pt}pt` }} className="leading-none">
+        <div key={pt} className={ROW}>
+          <span className={SIZE_LABEL}>{pt} pt</span>
+          <span style={{ ...style, fontSize: `${pt}pt` }} className="min-w-0 flex-1 leading-none">
             {line}
           </span>
         </div>
@@ -424,18 +466,24 @@ function HintingBlock({ style }: { style: React.CSSProperties }) {
 
 function LayoutBlock({ style }: { style: React.CSSProperties }) {
   return (
-    <div className="grid gap-6 border-b border-current/10 pb-6 md:grid-cols-2 lg:grid-cols-3" style={style}>
-      <p className="text-sm leading-relaxed">{PARAGRAPHS.short}</p>
-      <p className="text-sm leading-relaxed">{PARAGRAPHS.typography}</p>
-      <p className="text-sm leading-relaxed">{PARAGRAPHS.kafka}</p>
+    <div>
+      <h3 className={SECTION_HEADING}>Layout</h3>
+      <div className="grid gap-6 border-b border-current/10 pb-6 md:grid-cols-2 lg:grid-cols-3" style={style}>
+        <p className="text-sm leading-relaxed">{PARAGRAPHS.short}</p>
+        <p className="text-sm leading-relaxed">{PARAGRAPHS.typography}</p>
+        <p className="text-sm leading-relaxed">{PARAGRAPHS.kafka}</p>
+      </div>
     </div>
   );
 }
 
 function LetteringBlock({ style }: { style: React.CSSProperties }) {
   return (
-    <div style={{ ...style, fontSize: 64 }} className="leading-tight">
-      {PANGRAMS[1]}
+    <div>
+      <h3 className={SECTION_HEADING}>Lettering</h3>
+      <div style={{ ...style, fontSize: 64 }} className="leading-tight">
+        {PANGRAMS[1]}
+      </div>
     </div>
   );
 }
@@ -443,16 +491,17 @@ function LetteringBlock({ style }: { style: React.CSSProperties }) {
 function WorldBlock({ style }: { style: React.CSSProperties }) {
   return (
     <div className="space-y-6" style={style}>
+      <h3 className={SECTION_HEADING}>World scripts</h3>
       <div>
-        <span className="font-ui block text-xs uppercase opacity-70">Greek</span>
+        <div className={SUBSECTION_HEADING}>Greek</div>
         <p className="mt-1 text-lg">{WORLD_SCRIPTS.greek}</p>
       </div>
       <div>
-        <span className="font-ui block text-xs uppercase opacity-70">Cyrillic</span>
+        <div className={SUBSECTION_HEADING}>Cyrillic</div>
         <p className="mt-1 text-lg">{WORLD_SCRIPTS.cyrillic}</p>
       </div>
       <div>
-        <span className="font-ui block text-xs uppercase opacity-70">Hebrew</span>
+        <div className={SUBSECTION_HEADING}>Hebrew</div>
         <p className="mt-1 text-lg" dir="rtl">
           {WORLD_SCRIPTS.hebrew}
         </p>

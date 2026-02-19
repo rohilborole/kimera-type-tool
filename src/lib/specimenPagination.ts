@@ -15,42 +15,26 @@ const TAB_TO_BLOCKS_ORDER: Record<ActiveTab, SpecimenBlockType[] | 'ALL'> = {
   HINTING: ['HINTING'],
   LATIN: ['TEXT', 'A-Z'],
   WORLD: ['WORLD'],
+  GLYPH_INSPECTOR: [],
+  TYPE_PROOFING: [],
 };
 
-/** Proof order: Family → Character → Spacing → Words → Specimen → OT. */
+/** Proof order: Family/Adhesion → Character → Spacing → Kerning → Words → Specimen text → rest. */
 const ALL_BLOCKS_ORDER: SpecimenBlockType[] = [
   'HERO',
-  'HEADLINES',
-  'A-Z',
-  'SPACING',
-  'WORDS',
+  'ADHESION',
   'CAPS',
+  'SPACING',
+  'KERN',
+  'WORDS',
+  'A-Z',
   'TEXT',
+  'HEADLINES',
   'LAYOUT',
   'LETTERING',
-  'ADHESION',
-  'KERN',
   'HINTING',
   'WORLD',
 ];
-
-/** Approximate height tier per block (0–1). Sum per page ≤ 1. */
-const BLOCK_TIERS: Record<SpecimenBlockType, number> = {
-  HERO: 0.5,
-  HEADLINES: 0.35,
-  TEXT: 0.4,
-  ADHESION: 0.2,
-  KERN: 0.15,
-  'A-Z': 0.5,
-  WORDS: 0.15,
-  CAPS: 0.2,
-  SPACING: 0.4,
-  HINTING: 0.35,
-  LAYOUT: 0.25,
-  LETTERING: 0.2,
-  LATIN: 0.4,
-  WORLD: 0.3,
-};
 
 function getOrderedBlocks(activeTab: ActiveTab): SpecimenBlockType[] {
   const which = TAB_TO_BLOCKS_ORDER[activeTab];
@@ -58,32 +42,14 @@ function getOrderedBlocks(activeTab: ActiveTab): SpecimenBlockType[] {
   return which;
 }
 
-/** Heuristic pagination: partition blocks into pages so each page's tier sum ≤ 1. */
+/** One block per page so content flows to new pages for accurate print and canvas display. */
 export function getSpecimenPages(
   activeTab: ActiveTab,
   _pageSize: PageSize
 ): SpecimenBlockType[][] {
   const blocks = getOrderedBlocks(activeTab);
   if (blocks.length === 0) return [[]];
-
-  const pages: SpecimenBlockType[][] = [];
-  let currentPage: SpecimenBlockType[] = [];
-  let currentSum = 0;
-  const maxSum = 1;
-
-  for (const block of blocks) {
-    const tier = BLOCK_TIERS[block];
-    if (currentSum + tier > maxSum && currentPage.length > 0) {
-      pages.push(currentPage);
-      currentPage = [];
-      currentSum = 0;
-    }
-    currentPage.push(block);
-    currentSum += tier;
-  }
-  if (currentPage.length > 0) pages.push(currentPage);
-
-  return pages;
+  return blocks.map((block) => [block]);
 }
 
 export function getCurrentPageBlocks(

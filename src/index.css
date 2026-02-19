@@ -54,7 +54,7 @@ body.light-theme {
 }
 
 .canvas-glass {
-  background: rgba(18, 18, 20, 0.6);
+  background: rgba(10, 10, 11, 0.92);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
 }
@@ -150,34 +150,9 @@ body.light-theme ::-webkit-scrollbar-thumb:hover {
   background: rgba(0, 0, 0, 0.3);
 }
 
-/* Print — clean PDF export */
+/* Print — .print\:hidden only; full print layout is in PrintPreview injected styles */
 @media print {
-  body {
-    background: white !important;
-    color: #111 !important;
-  }
-
   .print\:hidden {
     display: none !important;
   }
-
-  .print-preview header {
-    display: none !important;
-  }
-
-  .print-preview > div:last-child {
-    overflow: visible !important;
-    padding: 0 !important;
-  }
-
-  .print-preview [class*="Page"] {
-    box-shadow: none !important;
-  }
-
-  @page {
-    margin: 1.5cm;
-    size: A4;
-  }
 }
-
-/* Injected when page size is A3 (see PrintPreview) */

@@ -1,3 +1,5 @@
+// --- Adhesion / Family ---
+
 export const PANGRAMS = [
   'The quick brown fox jumps over the lazy dog.',
   'Sphinx of black quartz, judge my vow.',
@@ -17,38 +19,6 @@ export const ADHESION = [
   'minimum',
   'millennium',
 ];
-
-export const HEADLINE_SENTENCES = [
-  'Type is the clothing of words.',
-  'Typography is the craft of endowing human language with a durable visual form.',
-  'Good typography is invisible.',
-  'Readability and legibility are not the same.',
-  'Letters are the pixels of language.',
-];
-
-export const PARAGRAPHS = {
-  short:
-    'When Gregor Samsa woke one morning from troubled dreams, he found himself transformed in his bed into a monstrous insect.',
-  kafka:
-    'When Gregor Samsa woke one morning from troubled dreams, he found himself transformed in his bed into a monstrous insect. He lay on his armour-like back, and if he lifted his head a little he could see his brown belly, slightly domed and divided by arches into stiff sections. The bedding was hardly able to cover it and seemed ready to slide off any moment. His many legs, pitifully thin compared with the size of the rest of him, waved about helplessly as he looked.',
-  typography:
-    'Typography is the art and technique of arranging type to make written language legible, readable and appealing when displayed. The arrangement involves selecting typefaces, point sizes, line lengths, line-spacing, and letter-spacing, and adjusting the space between pairs of letters.',
-  /** German specimen for waterfall / Regular Specimen (proof). */
-  germanSpecimen:
-    'Krummes Mumm Neuen anbohrend (Asyl) Mohr paar Wille war_wild titanische um; angespritzter Hose schlag klug. per festliegendes tilge welksten satten Bub-Sept Amuletten Jux am Unke erlag General ihn Kreis ich Bobkonstruktion? willigeren Bungalow Los Exoten planst Gauner Beeren fernbleibendem "Formblatt Fluchtwege" Furnier sprang mixt um klipp gilt! Vogtes ab seh am Piste. verbuchtes verzehre abbaute, Jacke Lupe See wo aufgeregt–Gibt einer fair flitz zotig Liz aufgescheuchten Erhardt in [Rat Bill Po] du verbog dieselben Asse gekantet Uni lach beschimpfenden Dotierungen breitem wagst da Vorsatz; aufgeforstet Absatzes, Angebern aufgebraustes: Dung ein pfiffigem Doppelpass Bar lenkst einzulenken eng Gicht Fresspaket errichtenden sehr tu=seine hob Part idealerem 1798, Sam Berta sein Ehe hergebrachten Po stolzer Assistentinnen Wirt dominierende echten \'Optimum\' Dachs ob am Box (Serie erkanntes dreimal) Minarett by graue fortbleibendes Oil edle bunte baumle pumpten eilst knotig Dom Person, Rabat Hirn da Po fiel "Ameisenhaufen" abspenstige Job Wurfpfeile Zopf Max Ulan Volke rollte Erz send Otter Tor Weltatlas.',
-};
-
-export const WORLD_SCRIPTS = {
-  greek: 'Γαζέες καὶ μυρτιὲς δὲν θὰ βρῶ πιὰ στὸ χρυσαφὶ ξέφωτο.',
-  cyrillic: 'Съешь же ещё этих мягких французских булок, да выпей чаю.',
-  hebrew: 'דג סקרן שט בים מאוכזב ולפתע מצא חברה.',
-};
-
-export const CAPS_SAMPLE = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-
-export const WORDS_SAMPLE = 'alignment ascender baseline cap-height counter descender glyph kerning ligature serif x-height';
-
-// --- Proof-based presets (Cursor Mono proof structure) ---
 
 /** Repeated words for Family Overview (anode / ADHESION). */
 export const ADHESION_REPEAT = ['anode', 'ADHESION'] as const;
@@ -73,6 +43,10 @@ export const ADHESION_GRID: string[] = [
   'Hanne nennen Hedda Hanne Hanne Seen endenden Eden Ode',
 ];
 
+// --- Character set ---
+
+export const CAPS_SAMPLE = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+
 /** Character overview: uppercase, two lines (proof p7–8). */
 export const CHARS_UC_LINE1 = 'ABCDEFGHIJKLMOP';
 export const CHARS_UC_LINE2 = 'QRSTUVWXYZ';
@@ -86,6 +60,8 @@ export const CHARS_NUMERALS = '0123456789';
 
 /** Character overview: punctuation (proof p9). */
 export const CHARS_PUNCTUATION = ['()[],.;:-–_\'"=', '?!@\t#'];
+
+// --- Spacing ---
 
 /** Spacing strings: lowercase nn+letter+oo per letter (proof p10–11). */
 export const SPACING_LC: string[] = [
@@ -200,6 +176,53 @@ export const SPACING_NUMERALS_HH: string[] = [
   'HH9HH9OO9OO9HH9HH9OO9OO9HH9HH',
 ];
 
+// --- Kerning pairs ---
+
+/** Classic kerning pairs (AT, AV, Fa, LO, etc.) for proofing. */
+export const KERNING_CLASSIC: string[] = [
+  'AT AV AW AY Av Aw Ay',
+  'Fa Fe Fo Kv Kw Ky LO',
+  'LV LY PA Pa Pe Po TA',
+  'Ta Te Ti To Tr Ts Tu Ty',
+  'UA VA Va Ve Vo Vr Vu Vy',
+  'WA WO Wa We Wr Wv Wy',
+];
+
+/** Incidentals: letter + punctuation (problem letters f, r, v, w, y, T, V, W, Y). */
+export const INCIDENTALS_LETTER_PUNCT: string[] = [
+  'f. f, f; f:',
+  'r. r, r; r:',
+  'v. v, v; v:',
+  'w. w, w; w:',
+  'y. y, y; y:',
+  'T. T, T; T:',
+  'V. V, V; V:',
+  'W. W, W; W:',
+  'Y. Y, Y; Y:',
+];
+
+/** Incidentals: exclamation and question (w! w? f! f?, guillemots). */
+export const INCIDENTALS_EXCLAM_QUEST: string[] = [
+  'w! w? f! f? ¡a ¿a',
+  '«n» «o» ‹n› ‹o›',
+];
+
+// --- Sidebearing ---
+
+/** Sidebearing: H + every uppercase letter (HAHBHCHD...HZ). */
+export const SIDEBEARING_H_UC =
+  'HAHBHCHDHEHFHGHHHIHJHKHLHMHNHOHPHQHRHSHTHUHVHWHXHYHZH';
+
+/** Sidebearing: n + every lowercase letter (nanbnc...nz). */
+export const SIDEBEARING_N_LC =
+  'nanbncndnenfngnhninjnknlnmnnnonpnqnrnsntnunvnwnxnynzn';
+
+/** Sidebearing: o + every lowercase letter (oaoboc...oz). */
+export const SIDEBEARING_O_LC =
+  'oaobocodoeofogohoiojokolomonooopoqorosotouovowoxoyozo';
+
+// --- Words ---
+
 /** A–Z specimen words for two-column layout A–K | L–Z (proof p14–15). */
 export const WORDS_AZ: string[] = [
   'Aaron', 'Able', 'Ache', 'Advert', 'Aegis', 'Aft', 'Age', 'Ahe', 'Ails', 'Ajar', 'Akin', 'Aloe', 'Amish', 'And',
@@ -219,6 +242,39 @@ export const WORDS_AZ: string[] = [
   'Xanth', 'Xelo', 'Xi', 'Xo', 'Xu', 'Xylo', 'Yviye', 'Yz', 'Yatzy', 'Yvonne', 'Yggdrasil',
   'Zanzabar', 'Zellis', 'Zion', 'Zope', 'Zulu',
 ];
+
+export const WORDS_SAMPLE = 'alignment ascender baseline cap-height counter descender glyph kerning ligature serif x-height';
+
+// --- Specimen text ---
+
+export const HEADLINE_SENTENCES = [
+  'Type is the clothing of words.',
+  'Typography is the craft of endowing human language with a durable visual form.',
+  'Good typography is invisible.',
+  'Readability and legibility are not the same.',
+  'Letters are the pixels of language.',
+];
+
+export const PARAGRAPHS = {
+  short:
+    'When Gregor Samsa woke one morning from troubled dreams, he found himself transformed in his bed into a monstrous insect.',
+  kafka:
+    'When Gregor Samsa woke one morning from troubled dreams, he found himself transformed in his bed into a monstrous insect. He lay on his armour-like back, and if he lifted his head a little he could see his brown belly, slightly domed and divided by arches into stiff sections. The bedding was hardly able to cover it and seemed ready to slide off any moment. His many legs, pitifully thin compared with the size of the rest of him, waved about helplessly as he looked.',
+  typography:
+    'Typography is the art and technique of arranging type to make written language legible, readable and appealing when displayed. The arrangement involves selecting typefaces, point sizes, line lengths, line-spacing, and letter-spacing, and adjusting the space between pairs of letters.',
+  /** German specimen for waterfall / Regular Specimen (proof). */
+  germanSpecimen:
+    'Krummes Mumm Neuen anbohrend (Asyl) Mohr paar Wille war_wild titanische um; angespritzter Hose schlag klug. per festliegendes tilge welksten satten Bub-Sept Amuletten Jux am Unke erlag General ihn Kreis ich Bobkonstruktion? willigeren Bungalow Los Exoten planst Gauner Beeren fernbleibendem "Formblatt Fluchtwege" Furnier sprang mixt um klipp gilt! Vogtes ab seh am Piste. verbuchtes verzehre abbaute, Jacke Lupe See wo aufgeregt–Gibt einer fair flitz zotig Liz aufgescheuchten Erhardt in [Rat Bill Po] du verbog dieselben Asse gekantet Uni lach beschimpfenden Dotierungen breitem wagst da Vorsatz; aufgeforstet Absatzes, Angebern aufgebraustes: Dung ein pfiffigem Doppelpass Bar lenkst einzulenken eng Gicht Fresspaket errichtenden sehr tu=seine hob Part idealerem 1798, Sam Berta sein Ehe hergebrachten Po stolzer Assistentinnen Wirt dominierende echten \'Optimum\' Dachs ob am Box (Serie erkanntes dreimal) Minarett by graue fortbleibendes Oil edle bunte baumle pumpten eilst knotig Dom Person, Rabat Hirn da Po fiel "Ameisenhaufen" abspenstige Job Wurfpfeile Zopf Max Ulan Volke rollte Erz send Otter Tor Weltatlas.',
+  /** Emil Ruder spacing test: multilingual words for even colour (top and bottom paragraphs should match). */
+  ruder:
+    'bibel malhabile modo biegen peuple punibile blind qualifier quindi damals quelle dinamica china quelque analiso schaden salomon macchina schein sellier secondo lager sommier singolo legion unique possibile mime unanime unico mohn usuel legge nagel abonner unione puder agir punizione quälen aiglon dunque huldigen allégir quando geduld alliance uomini vertrag crainte screw verwalter croyant science verzicht fratricide sketchy vorrede frivolité story yankee instruction take zwetschge lyre treaty zypresse navette tricycle fraktur nocturne typograph kraft pervertir vanity raffeln presto victory reaktion prévoyant vivacity rekord priorité wayward revolte proscrire efficiency tritt raviver without trotzkopf tactilité through tyrann arrêt known',
+};
+
+export const WORLD_SCRIPTS = {
+  greek: 'Γαζέες καὶ μυρτιὲς δὲν θὰ βρῶ πιὰ στὸ χρυσαφὶ ξέφωτο.',
+  cyrillic: 'Съешь же ещё этих мягких французских булок, да выпей чаю.',
+  hebrew: 'דג סקרן שט בים מאוכזב ולפתע מצא חברה.',
+};
 
 /** German specimen paragraph for waterfall (re-export from PARAGRAPHS). */
 export const GERMAN_SPECIMEN = PARAGRAPHS.germanSpecimen;
