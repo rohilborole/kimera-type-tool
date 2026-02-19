@@ -2,7 +2,6 @@ import { useState, useCallback } from 'react';
 import { useEffect } from 'react';
 import type {
   Theme,
-  FontMetadata,
   VariableAxis,
   ActiveTab,
   Annotation,
@@ -13,11 +12,18 @@ import type {
   PageSize,
   PageOrientation,
   ProofingBlock,
-  GlyphInfo,
+  FontEntry,
+  Tab,
 } from '../types';
 import { parseFontFile, COMMON_OPENTYPE_FEATURES, buildFontVariationSettings, buildFontFeatureSettings } from '../lib/fontEngine';
 
 const ACCEPT_FONT = '.ttf,.otf,.woff,.woff2';
+const MAX_FONTS = 10;
+const MAX_TABS = 20;
+
+const INITIAL_MAIN_TAB: Tab = { id: 'main', type: 'main', name: 'Main', fontIds: [] };
+const INITIAL_VARIABLE_TAB: Tab = { id: 'variable', type: 'variable', name: 'Variable' };
+const INITIAL_TABS: Tab[] = [INITIAL_MAIN_TAB, INITIAL_VARIABLE_TAB];
 
 const initialAxes: VariableAxis[] = [];
 const initialFeatures: Record<string, boolean> = {};
@@ -63,15 +69,15 @@ const defaultTextStyle: CurrentTextStyle = {
 
 export function useAppStore() {
   const [theme, setTheme] = useState<Theme>('light');
-  const [fontUrl, setFontUrl] = useState<string | null>(null);
-  const [metadata, setMetadata] = useState<FontMetadata | null>(null);
-  const [glyphs, setGlyphs] = useState<GlyphInfo[]>([]);
+  const [fontEntries, setFontEntriesState] = useState<FontEntry[]>([]);
   const [axes, setAxes] = useState<VariableAxis[]>(initialAxes);
   const [activeFeatures, setActiveFeatures] = useState<Record<string, boolean>>(initialFeatures);
   const [activeTab, setActiveTab] = useState<ActiveTab>('ALL');
+  const [tabs, setTabs] = useState<Tab[]>(INITIAL_TABS);
+  const [activeTabId, setActiveTabId] = useState<string>('main');
   const [isPrinting, setIsPrinting] = useState(false);
   const [isPrintPreview, setIsPrintPreview] = useState(false);
-  const [pageSize, setPageSize] = useState<PageSize>('A4');
+  const [pageSize, setPageSize] = useState<PageSize>('A3');
   const [pageOrientation, setPageOrientation] = useState<PageOrientation>('landscape');
   const [currentPageIndex, setCurrentPageIndex] = useState(() => loadPersisted().currentPageIndex);
   const [proofingBlocks, setProofingBlocksState] = useState<ProofingBlock[]>(() => loadPersisted().proofingBlocks);
@@ -89,6 +95,11 @@ export function useAppStore() {
   const [drawings, setDrawings] = useState<DrawingStroke[]>([]);
   const [selectedElementId, setSelectedElementId] = useState<string | null>(null);
 
+  const primary = fontEntries[0] ?? null;
+  const fontUrl = primary?.blobUrl ?? null;
+  const metadata = primary?.metadata ?? null;
+  const glyphs = primary?.glyphs ?? [];
+
   useEffect(() => {
     try {
       localStorage.setItem(
@@ -100,44 +111,90 @@ export function useAppStore() {
     }
   }, [currentPageIndex, proofingBlocks]);
 
+  useEffect(() => {
+    if (!primary) {
+      setAxes(initialAxes);
+      setActiveFeatures(initialFeatures);
+      return;
+    }
+    setAxes(primary.axes ?? []);
+    const tags = (primary.featureTags?.length ? primary.featureTags : COMMON_OPENTYPE_FEATURES) as string[];
+    const features: Record<string, boolean> = {};
+    for (const tag of tags) features[tag] = tag === 'liga' || tag === 'kern';
+    setActiveFeatures(features);
+  }, [primary?.id]);
+
   const loadFont = useCallback(async (file: File) => {
     setLoadError(null);
     setLoading(true);
-    const prevUrl = fontUrl;
-    if (prevUrl) URL.revokeObjectURL(prevUrl);
     try {
       const { blobUrl, metadata: meta, axes: newAxes, featureTags, glyphs: newGlyphs } = await parseFontFile(file);
-      setFontUrl(blobUrl);
-      setMetadata(meta);
-      setAxes(newAxes);
-      setGlyphs(newGlyphs);
-      const tags = featureTags?.length ? featureTags : COMMON_OPENTYPE_FEATURES;
-      const features: Record<string, boolean> = {};
-      for (const tag of tags) features[tag] = tag === 'liga' || tag === 'kern';
-      setActiveFeatures(features);
+      const id = crypto.randomUUID();
+      const entry: FontEntry = {
+        id,
+        blobUrl,
+        fileType: meta?.fileType,
+        metadata: meta,
+        glyphs: newGlyphs,
+        axes: newAxes,
+        featureTags: featureTags?.length ? featureTags : COMMON_OPENTYPE_FEATURES,
+      };
+      setFontEntriesState((prev) => (prev.length >= MAX_FONTS ? prev : [...prev, entry]));
       setAxisAnimating({});
     } catch (e) {
       const msg = e instanceof Error ? e.message : 'Failed to load font';
       setLoadError(msg);
-      setFontUrl(null);
-      setMetadata(null);
-      setAxes([]);
-      setGlyphs([]);
-      setActiveFeatures({});
     } finally {
       setLoading(false);
     }
-  }, [fontUrl]);
+  }, []);
+
+  const removeFont = useCallback((id: string) => {
+    setFontEntriesState((prev) => {
+      const entry = prev.find((e) => e.id === id);
+      if (entry?.blobUrl) URL.revokeObjectURL(entry.blobUrl);
+      return prev.filter((e) => e.id !== id);
+    });
+  }, []);
+
+  const reorderFonts = useCallback((fromIndex: number, toIndex: number) => {
+    setFontEntriesState((prev) => {
+      if (fromIndex < 0 || fromIndex >= prev.length || toIndex < 0 || toIndex >= prev.length) return prev;
+      const next = [...prev];
+      const [removed] = next.splice(fromIndex, 1);
+      next.splice(toIndex, 0, removed);
+      return next;
+    });
+  }, []);
 
   const resetFont = useCallback(() => {
-    if (fontUrl) URL.revokeObjectURL(fontUrl);
-    setFontUrl(null);
-    setMetadata(null);
-    setGlyphs([]);
-    setAxes([]);
-    setActiveFeatures({});
+    setFontEntriesState((prev) => {
+      prev.forEach((e) => {
+        if (e.blobUrl) URL.revokeObjectURL(e.blobUrl);
+      });
+      return [];
+    });
+    setAxes(initialAxes);
+    setActiveFeatures(initialFeatures);
     setAxisAnimating({});
-  }, [fontUrl]);
+  }, []);
+
+  const updateTabFontIds = useCallback((tabId: string, fontIds: string[]) => {
+    setTabs((prev) =>
+      prev.map((t) => (t.id === tabId && t.type === 'main' ? { ...t, fontIds } : t))
+    );
+  }, []);
+
+  const addCustomTab = useCallback(() => {
+    const tabId = `custom-${crypto.randomUUID()}`;
+    setTabs((prev) => {
+      if (prev.length >= MAX_TABS) return prev;
+      const n = prev.filter((t) => t.type === 'custom').length + 1;
+      const tab: Tab = { id: tabId, type: 'custom', name: `Custom ${n}` };
+      return [...prev, tab];
+    });
+    setActiveTabId(tabId);
+  }, []);
 
   const setProofingBlocks = useCallback((updater: (prev: ProofingBlock[]) => ProofingBlock[]) => {
     setProofingBlocksState(updater);
@@ -302,6 +359,14 @@ export function useAppStore() {
     setAxisAnimatingState,
     loadFont,
     resetFont,
+    fontEntries,
+    removeFont,
+    reorderFonts,
+    tabs,
+    activeTabId,
+    setActiveTabId,
+    updateTabFontIds,
+    addCustomTab,
     acceptFont: ACCEPT_FONT,
     loadError,
     loading,

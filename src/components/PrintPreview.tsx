@@ -1,5 +1,5 @@
 import { useRef, useCallback } from 'react';
-import type { ActiveTab, PageSize, PageOrientation, Theme } from '../types';
+import type { PageSize, PageOrientation, Theme } from '../types';
 import { getSpecimenPages } from '../lib/specimenPagination';
 import { getPageDimensions, getPrintPageSize, getPrintContentBox } from '../lib/pageDimensions';
 import { LOADED_FONT_FAMILY } from '../lib/fontEngine';
@@ -7,10 +7,10 @@ import { SpecimenBlocks } from './SpecimenBlocks';
 
 interface PrintPreviewProps {
   onClose: () => void;
-  onPrint: () => void;
   pageSize: PageSize;
   pageOrientation: PageOrientation;
-  activeTab: ActiveTab;
+  /** Which document tab is active; export is supported for Main. */
+  activeTabId: string;
   specimenStyle: React.CSSProperties;
   theme: Theme;
   fontUrl: string | null;
@@ -31,13 +31,14 @@ export function PrintPreview({
   onClose,
   pageSize,
   pageOrientation,
-  activeTab,
+  activeTabId,
   specimenStyle,
   theme,
   fontUrl,
   fontFileType,
 }: PrintPreviewProps) {
-  const pages = getSpecimenPages(activeTab, pageSize);
+  const canExportSpecimen = activeTabId === 'main';
+  const pages = canExportSpecimen ? getSpecimenPages('ALL', pageSize) : [];
   const dims = getPageDimensions(pageSize, pageOrientation);
   const isLight = theme === 'light';
   const pagesContainerRef = useRef<HTMLDivElement>(null);
@@ -146,10 +147,12 @@ export function PrintPreview({
       >
         <div className="flex flex-col gap-0.5">
           <h2 className={`text-sm font-semibold ${isLight ? 'text-gray-900' : 'text-white'}`}>
-            Print preview — {pages.length} page(s)
+            Print preview {canExportSpecimen ? `— ${pages.length} page(s)` : '(Main tab only)'}
           </h2>
           <p className={`text-xs ${isLight ? 'text-gray-500' : 'text-white/60'}`}>
-            Click Save as PDF, then choose &quot;Save as PDF&quot; as the destination.
+            {canExportSpecimen
+              ? 'Click Save as PDF, then choose "Save as PDF" as the destination.'
+              : 'Export is available from the Main tab. Switch to Main and try again.'}
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
@@ -167,11 +170,12 @@ export function PrintPreview({
           <button
             type="button"
             onClick={handlePrint}
-            title="Opens the print dialog. Choose Save as PDF as the destination."
+            disabled={!canExportSpecimen}
+            title={canExportSpecimen ? 'Opens the print dialog. Choose Save as PDF as the destination.' : 'Switch to Main tab to export.'}
             className={
               isLight
-                ? 'rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800'
-                : 'rounded-lg bg-white px-4 py-2 text-sm font-medium text-gray-900 hover:bg-gray-200'
+                ? 'rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800 disabled:opacity-50 disabled:pointer-events-none'
+                : 'rounded-lg bg-white px-4 py-2 text-sm font-medium text-gray-900 hover:bg-gray-200 disabled:opacity-50 disabled:pointer-events-none'
             }
           >
             Save as PDF
@@ -179,6 +183,13 @@ export function PrintPreview({
         </div>
       </header>
       <div className="print-preview-content flex-1 overflow-auto p-6">
+        {!canExportSpecimen ? (
+          <div className={`rounded-xl border p-8 text-center ${isLight ? 'border-gray-200 bg-white' : 'border-white/10 bg-white/5'}`}>
+            <p className={isLight ? 'text-gray-600' : 'text-white/70'}>
+              PDF export is available for the <strong>Main</strong> tab. Switch to Main and open Export again.
+            </p>
+          </div>
+        ) : (
         <div
           ref={pagesContainerRef}
           className="print-preview-pages mx-auto flex max-w-max flex-col gap-6"
@@ -196,7 +207,7 @@ export function PrintPreview({
             >
               <div className="print-page-inner flex flex-1 flex-col overflow-visible">
                 <SpecimenBlocks
-                  activeTab={activeTab}
+                  activeTab="ALL"
                   specimenStyle={specimenStyle}
                   isPrinting={true}
                   blockTypesToShow={blockTypes}
@@ -212,6 +223,7 @@ export function PrintPreview({
             </div>
           ))}
         </div>
+        )}
       </div>
     </div>
   );

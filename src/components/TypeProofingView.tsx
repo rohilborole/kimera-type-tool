@@ -1,7 +1,8 @@
 import { useCallback } from 'react';
-import type { ProofingBlock as ProofingBlockType, VariableAxis } from '../types';
+import type { ProofingBlock as ProofingBlockType, VariableAxis, GlyphInfo } from '../types';
 import { buildFontFeatureSettings, LOADED_FONT_FAMILY } from '../lib/fontEngine';
 import { PROOFING_PRESETS, type ProofingPresetCategory } from '../lib/proofingLibrary';
+import { MissingGlyphText } from './MissingGlyphText';
 
 interface TypeProofingViewProps {
   fontUrl: string | null;
@@ -11,6 +12,7 @@ interface TypeProofingViewProps {
   axes: VariableAxis[];
   activeFeatures: Record<string, boolean>;
   theme: 'dark' | 'light';
+  glyphs?: GlyphInfo[];
   setActiveProofingBlockId: (id: string | null) => void;
   addProofingBlock: (initialText?: string) => string;
   updateProofingBlock: (id: string, updates: Partial<Pick<ProofingBlockType, 'text' | 'featureOverrides'>>) => void;
@@ -39,6 +41,7 @@ export function TypeProofingView({
   axes,
   activeFeatures,
   theme,
+  glyphs = [],
   setActiveProofingBlockId,
   addProofingBlock,
   updateProofingBlock,
@@ -220,6 +223,21 @@ export function TypeProofingView({
                 style={style}
                 rows={3}
               />
+              {glyphs.length > 0 && block.text && (
+                <div
+                  className="rounded border border-dashed py-2 pr-2 pl-2 text-sm leading-relaxed"
+                  style={{ borderColor: theme === 'light' ? 'rgba(0,0,0,0.15)' : 'rgba(255,255,255,0.15)' }}
+                  title="Preview: missing glyphs shown as red circles"
+                >
+                  <MissingGlyphText
+                    text={block.text}
+                    style={style}
+                    glyphs={glyphs}
+                    as="div"
+                    className="min-h-[1.4em]"
+                  />
+                </div>
+              )}
               {isActive && Object.keys(activeFeatures).length > 0 && (
                 <div
                   className="flex flex-wrap gap-3 border-t pt-3"

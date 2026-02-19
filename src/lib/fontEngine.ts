@@ -1,7 +1,12 @@
 import type { FontMetadata, VariableAxis, GlyphInfo } from '../types';
 
-/** Internal font-family used for @font-face and all canvas text when a font is loaded */
+/** Internal font-family used for @font-face and all canvas text when a single font is loaded */
 export const LOADED_FONT_FAMILY = 'KimeraLoadedFont';
+
+/** Family name for a font entry (multi-font support). */
+export function getFontFamilyForEntryId(id: string): string {
+  return `${LOADED_FONT_FAMILY}_${id}`;
+}
 
 /** Common OpenType feature tags — always show toggles so user can try them */
 export const COMMON_OPENTYPE_FEATURES = [
@@ -204,4 +209,11 @@ export function buildFontFeatureSettings(activeFeatures: Record<string, boolean>
 /** Build fontFeatureSettings with only one feature on or off (for preview). */
 export function buildSingleFeatureSettings(tag: string, on: boolean): string {
   return `"${tag}" ${on ? 1 : 0}`;
+}
+
+/** True if the font has no glyph for this code point or the glyph is .notdef (empty). */
+export function isGlyphMissingOrEmpty(glyphs: GlyphInfo[], codePoint: number): boolean {
+  const glyph = glyphs.find((g) => g.unicode === codePoint);
+  if (!glyph) return true;
+  return (glyph.name ?? '.notdef') === '.notdef';
 }

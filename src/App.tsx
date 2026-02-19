@@ -2,6 +2,7 @@ import { useCallback, useEffect } from 'react';
 import { useAppStore } from './store/useAppStore';
 import { useSpecimenStyle } from './hooks/useSpecimenStyle';
 import { useFontFace } from './hooks/useFontFace';
+import { getFontFamilyForEntryId } from './lib/fontEngine';
 import { Sidebar } from './components/Sidebar';
 import { Canvas } from './components/Canvas';
 import { PrintPreview } from './components/PrintPreview';
@@ -13,6 +14,14 @@ export function App() {
     fontUrl,
     metadata,
     glyphs,
+    fontEntries,
+    removeFont,
+    reorderFonts,
+    tabs,
+    activeTabId,
+    setActiveTabId,
+    updateTabFontIds,
+    addCustomTab,
     axes,
     setAxisValue,
     activeFeatures,
@@ -70,8 +79,9 @@ export function App() {
   } = useAppStore();
 
   const effectiveTheme = isPrinting ? 'light' : theme;
-  useFontFace(fontUrl, metadata?.fileType);
-  const specimenStyle = useSpecimenStyle(fontUrl, axes, activeFeatures);
+  const primaryFontFamily = fontEntries[0] ? getFontFamilyForEntryId(fontEntries[0].id) : null;
+  useFontFace(fontEntries);
+  const specimenStyle = useSpecimenStyle(primaryFontFamily, axes, activeFeatures);
 
   useEffect(() => {
     document.body.classList.toggle('light-theme', effectiveTheme === 'light');
@@ -95,10 +105,9 @@ export function App() {
     return (
       <PrintPreview
         onClose={() => setIsPrintPreview(false)}
-        onPrint={() => window.print()}
         pageSize={pageSize}
         pageOrientation={pageOrientation}
-        activeTab={activeTab}
+        activeTabId={activeTabId}
         specimenStyle={specimenStyle}
         theme={theme}
         fontUrl={fontUrl}
@@ -126,6 +135,9 @@ export function App() {
           theme={theme}
           setTheme={setTheme}
           fontUrl={fontUrl}
+          fontEntries={fontEntries}
+          removeFont={removeFont}
+          reorderFonts={reorderFonts}
           metadata={metadata}
           axes={axes}
           setAxisValue={setAxisValue}
@@ -148,7 +160,18 @@ export function App() {
         setActiveTab={setActiveTab}
         specimenStyle={specimenStyle}
         fontUrl={fontUrl}
+        fontEntries={fontEntries}
+        removeFont={removeFont}
+        reorderFonts={reorderFonts}
+        tabs={tabs}
+        activeTabId={activeTabId}
+        setActiveTabId={setActiveTabId}
+        updateTabFontIds={updateTabFontIds}
+        addCustomTab={addCustomTab}
         axes={axes}
+        setAxisValue={setAxisValue}
+        axisAnimating={axisAnimating}
+        setAxisAnimatingState={setAxisAnimatingState}
         activeFeatures={activeFeatures}
         isPrinting={isPrinting}
         theme={effectiveTheme}

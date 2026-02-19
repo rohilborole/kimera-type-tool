@@ -2,25 +2,13 @@ import type { ActiveTab, PageSize, SpecimenBlockType } from '../types';
 
 const TAB_TO_BLOCKS_ORDER: Record<ActiveTab, SpecimenBlockType[] | 'ALL'> = {
   ALL: 'ALL',
-  HEADLINES: ['HERO', 'HEADLINES'],
-  TEXT: ['TEXT'],
-  ADHESION: ['ADHESION', 'KERN'],
-  'A-Z': ['A-Z'],
-  WORDS: ['WORDS'],
-  CAPS: ['CAPS'],
-  SPACING: ['SPACING'],
-  LAYOUT: ['LAYOUT'],
-  LETTERING: ['LETTERING'],
-  KERN: ['ADHESION', 'KERN'],
-  HINTING: ['HINTING'],
-  LATIN: ['TEXT', 'A-Z'],
-  WORLD: ['WORLD'],
+  CUSTOM: 'ALL', // same as ALL for now; later user-defined block list
   GLYPH_INSPECTOR: [],
   TYPE_PROOFING: [],
 };
 
 /** Proof order: Family/Adhesion → Character → Spacing → Kerning → Words → Specimen text → rest. */
-const ALL_BLOCKS_ORDER: SpecimenBlockType[] = [
+export const ALL_BLOCKS_ORDER: SpecimenBlockType[] = [
   'HERO',
   'ADHESION',
   'CAPS',
@@ -36,20 +24,21 @@ const ALL_BLOCKS_ORDER: SpecimenBlockType[] = [
   'WORLD',
 ];
 
-function getOrderedBlocks(activeTab: ActiveTab): SpecimenBlockType[] {
+/** Single flat list of blocks for the given tab (no pagination). */
+export function getOrderedBlocks(activeTab: ActiveTab): SpecimenBlockType[] {
   const which = TAB_TO_BLOCKS_ORDER[activeTab];
   if (which === 'ALL') return ALL_BLOCKS_ORDER;
   return which;
 }
 
-/** One block per page so content flows to new pages for accurate print and canvas display. */
+/** For ALL/CUSTOM: one page with all blocks. For print/legacy use. */
 export function getSpecimenPages(
   activeTab: ActiveTab,
   _pageSize: PageSize
 ): SpecimenBlockType[][] {
   const blocks = getOrderedBlocks(activeTab);
   if (blocks.length === 0) return [[]];
-  return blocks.map((block) => [block]);
+  return [blocks];
 }
 
 export function getCurrentPageBlocks(

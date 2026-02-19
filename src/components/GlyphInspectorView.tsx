@@ -1,6 +1,5 @@
 import { useCallback, useMemo, useRef, useState } from 'react';
 import type { GlyphInfo } from '../types';
-import { LOADED_FONT_FAMILY } from '../lib/fontEngine';
 
 const ROW_HEIGHT = 48;
 const COLS = 16;
@@ -49,7 +48,7 @@ export function GlyphInspectorView({
   }, []);
 
   const cellStyle: React.CSSProperties = {
-    fontFamily: fontFamily ? `"${LOADED_FONT_FAMILY}", sans-serif` : 'sans-serif',
+    fontFamily: fontFamily ? `${fontFamily}, sans-serif` : 'sans-serif',
     fontSize: 24,
   };
 

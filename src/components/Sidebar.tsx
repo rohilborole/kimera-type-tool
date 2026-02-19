@@ -1,13 +1,19 @@
 import { useRef, useState } from 'react';
 import type { Theme, VariableAxis } from '../types';
+import type { FontEntry } from '../types';
 import { AxisControl } from './AxisControl';
 import { buildSingleFeatureSettings } from '../lib/fontEngine';
 import { getSampleForFeature, getLabelForFeature } from '../lib/featureSamples';
+
+const MAX_FONTS = 10;
 
 interface SidebarProps {
   theme: Theme;
   setTheme: (t: Theme) => void;
   fontUrl: string | null;
+  fontEntries: FontEntry[];
+  removeFont: (id: string) => void;
+  reorderFonts: (fromIndex: number, toIndex: number) => void;
   metadata: { familyName: string; fileType: string; fileSize: number; glyphCount: number } | null;
   axes: VariableAxis[];
   setAxisValue: (tag: string, value: number) => void;
@@ -39,7 +45,10 @@ export function Sidebar({
   theme,
   setTheme,
   fontUrl,
-  metadata,
+  fontEntries,
+  removeFont,
+  reorderFonts,
+  metadata: _metadata,
   axes,
   setAxisValue,
   activeFeatures,
@@ -57,13 +66,14 @@ export function Sidebar({
 }: SidebarProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [isDragging, setIsDragging] = useState(false);
+  const [dragIndex, setDragIndex] = useState<number | null>(null);
 
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
     setIsDragging(false);
     const file = e.dataTransfer.files[0];
-    if (file && acceptFile(file, acceptFont)) loadFont(file).catch(() => {});
+    if (file && acceptFile(file, acceptFont) && fontEntries.length < MAX_FONTS) loadFont(file).catch(() => {});
   };
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -81,9 +91,22 @@ export function Sidebar({
 
   const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) loadFont(file).catch(() => {});
+    if (file && fontEntries.length < MAX_FONTS) loadFont(file).catch(() => {});
     e.target.value = '';
   };
+
+  const handleListDragStart = (index: number) => (e: React.DragEvent) => {
+    setDragIndex(index);
+    e.dataTransfer.setData('text/plain', String(index));
+    e.dataTransfer.effectAllowed = 'move';
+  };
+  const handleListDragOver = (e: React.DragEvent, toIndex: number) => {
+    e.preventDefault();
+    if (dragIndex === null) return;
+    if (dragIndex !== toIndex) reorderFonts(dragIndex, toIndex);
+    setDragIndex(null);
+  };
+  const handleListDragEnd = () => setDragIndex(null);
 
   const featureTags = fontUrl && Object.keys(activeFeatures).length > 0
     ? Object.keys(activeFeatures).sort()
@@ -109,24 +132,57 @@ export function Sidebar({
       </header>
 
       <div className="flex flex-1 flex-col gap-4 overflow-y-auto p-4">
-        {/* Upload */}
+        {/* Fonts */}
         <section>
-          {!fontUrl ? (
+          <h2 className={`mb-2 text-xs font-medium uppercase tracking-wider ${theme === 'light' ? 'text-gray-600' : 'text-white/70'}`}>Fonts</h2>
+          {fontEntries.length > 0 && (
+            <ul className="mb-3 space-y-2">
+              {fontEntries.map((entry, index) => (
+                <li
+                  key={entry.id}
+                  draggable
+                  onDragStart={handleListDragStart(index)}
+                  onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; }}
+                  onDrop={(e) => handleListDragOver(e, index)}
+                  onDragEnd={handleListDragEnd}
+                  className={`flex items-center gap-2 rounded-xl border p-2 ${
+                    theme === 'light' ? 'border-gray-200 bg-gray-50/80' : 'border-white/10 bg-white/5'
+                  }`}
+                >
+                  <span className="cursor-grab touch-none text-xs opacity-60" title="Drag to reorder">⋮⋮</span>
+                  <span className="min-w-0 flex-1 truncate text-xs font-medium" title={entry.metadata?.familyName}>
+                    {entry.metadata?.familyName ?? `Font ${index + 1}`}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => removeFont(entry.id)}
+                    className="shrink-0 rounded px-1.5 py-0.5 text-xs text-red-400 hover:bg-red-500/20"
+                    title="Remove font"
+                  >
+                    Remove
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+          {fontEntries.length < MAX_FONTS && (
             <div
               onDragOver={handleDragOver}
               onDragLeave={handleDragLeave}
               onDrop={handleDrop}
               onClick={() => inputRef.current?.click()}
-              className={`glass-upload flex min-h-[128px] cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed p-5 text-center transition-all ${
+              className={`glass-upload flex min-h-[80px] cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed p-4 text-center transition-all ${
                 isDragging ? 'border-white/50 bg-white/10' : 'border-white/20 hover:border-white/40 hover:bg-white/5'
-              } ${loading ? 'pointer-events-none opacity-70' : ''}`}
+              } ${theme === 'light' ? 'border-gray-300 hover:border-gray-400' : ''} ${loading ? 'pointer-events-none opacity-70' : ''}`}
             >
               {loading ? (
                 <span className="text-sm">Loading font…</span>
               ) : (
                 <>
-                  <span className="mb-1 block text-sm font-medium">Drop font here or click</span>
-                  <span className={theme === 'light' ? 'text-gray-500' : 'text-white/60'}>.ttf · .otf · .woff · .woff2</span>
+                  <span className="block text-xs font-medium">Add font · drop or click</span>
+                  <span className={`mt-0.5 block text-xs ${theme === 'light' ? 'text-gray-500' : 'text-white/60'}`}>
+                    {fontEntries.length}/{MAX_FONTS}
+                  </span>
                   {loadError && (
                     <p className="mt-2 max-w-full truncate text-xs text-red-400">{loadError}</p>
                   )}
@@ -140,22 +196,15 @@ export function Sidebar({
                 className="hidden"
               />
             </div>
-          ) : (
-            <div className="glass-card rounded-2xl p-4">
-              <div className="text-xs">
-                <div className="font-semibold">{metadata?.familyName ?? '—'}</div>
-                <div className={theme === 'light' ? 'mt-1 text-gray-600' : 'mt-1 text-white/70'}>
-                  {metadata?.fileType} · {((metadata?.fileSize ?? 0) / 1024).toFixed(1)} KB · {metadata?.glyphCount} glyphs
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={() => { clearLoadError(); resetFont(); }}
-                className={`mt-3 w-full rounded-xl border py-2 text-xs font-medium uppercase tracking-wider hover:bg-white/10 ${theme === 'light' ? 'border-gray-300 text-gray-800 hover:bg-gray-100' : 'border-white/20 text-white/90'}`}
-              >
-                Reset Font
-              </button>
-            </div>
+          )}
+          {fontEntries.length > 0 && (
+            <button
+              type="button"
+              onClick={() => { clearLoadError(); resetFont(); }}
+              className={`mt-3 w-full rounded-xl border py-2 text-xs font-medium uppercase tracking-wider ${theme === 'light' ? 'border-gray-300 text-gray-800 hover:bg-gray-100' : 'border-white/20 text-white/90 hover:bg-white/10'}`}
+            >
+              Reset all fonts
+            </button>
           )}
         </section>
 

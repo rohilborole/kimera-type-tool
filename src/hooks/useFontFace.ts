@@ -1,5 +1,6 @@
-import { useEffect } from 'react';
-import { LOADED_FONT_FAMILY } from '../lib/fontEngine';
+import { useEffect, useMemo } from 'react';
+import { getFontFamilyForEntryId } from '../lib/fontEngine';
+import type { FontEntry } from '../types';
 
 function formatForFontFace(fileType: string | undefined): string {
   if (!fileType) return '';
@@ -11,28 +12,31 @@ function formatForFontFace(fileType: string | undefined): string {
   return '';
 }
 
-export function useFontFace(blobUrl: string | null, fileType?: string) {
+export function useFontFace(fontEntries: FontEntry[]) {
+  const fontEntriesKey = useMemo(
+    () => fontEntries.map((e) => `${e.id}:${e.blobUrl}`).join('|'),
+    [fontEntries]
+  );
+
   useEffect(() => {
-    if (!blobUrl) return;
-    const id = 'kimera-loaded-font';
+    if (fontEntries.length === 0) return;
+    const id = 'kimera-loaded-fonts';
     let style = document.getElementById(id) as HTMLStyleElement | null;
     if (!style) {
       style = document.createElement('style');
       style.id = id;
       document.head.appendChild(style);
     }
-    const format = formatForFontFace(fileType);
-    const formatPart = format ? ` format("${format}")` : '';
-    style.textContent = `
-      @font-face {
-        font-family: "${LOADED_FONT_FAMILY}";
-        src: url("${blobUrl}")${formatPart};
-        font-display: block;
-      }
-    `;
+    const rules = fontEntries.map((entry) => {
+      const format = formatForFontFace(entry.fileType);
+      const formatPart = format ? ` format("${format}")` : '';
+      const family = getFontFamilyForEntryId(entry.id);
+      return `@font-face { font-family: "${family}"; src: url("${entry.blobUrl}")${formatPart}; font-display: block; }`;
+    });
+    style.textContent = rules.join('\n');
     return () => {
       const el = document.getElementById(id);
       if (el) el.remove();
     };
-  }, [blobUrl, fileType]);
+  }, [fontEntries.length, fontEntriesKey]);
 }

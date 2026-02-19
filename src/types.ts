@@ -12,6 +12,17 @@ export interface FontMetadata {
   isVariable: boolean;
 }
 
+/** One entry in the global upload list (ordered). */
+export interface FontEntry {
+  id: string;
+  blobUrl: string;
+  fileType?: string;
+  metadata?: FontMetadata;
+  glyphs?: GlyphInfo[];
+  axes?: VariableAxis[];
+  featureTags?: string[];
+}
+
 export interface VariableAxis {
   tag: string;
   name: string;
@@ -23,21 +34,43 @@ export interface VariableAxis {
 
 export type ActiveTab =
   | 'ALL'
-  | 'HEADLINES'
-  | 'TEXT'
-  | 'ADHESION'
-  | 'A-Z'
-  | 'WORDS'
-  | 'CAPS'
-  | 'SPACING'
-  | 'LAYOUT'
-  | 'LETTERING'
-  | 'KERN'
-  | 'HINTING'
-  | 'LATIN'
-  | 'WORLD'
+  | 'CUSTOM'
   | 'GLYPH_INSPECTOR'
   | 'TYPE_PROOFING';
+
+/** Document tab (Main, Variable, or Custom). */
+export interface Tab {
+  id: string;
+  type: 'main' | 'variable' | 'custom';
+  name: string;
+  /** Main only: font entry IDs to show on this page (order = display order). */
+  fontIds?: string[];
+}
+
+/** Typesetting for a block (font, size, weight, etc.). */
+export interface BlockTypesetting {
+  fontId?: string;
+  fontSize: number;
+  fontWeight: number;
+  fontStyle?: 'normal' | 'italic';
+  lineHeight?: number;
+  letterSpacing?: number;
+  alignment?: 'left' | 'center' | 'right' | 'justify';
+}
+
+/** Proofing set key for block content. */
+export type ProofingSetKey =
+  | 'basicKerning'
+  | 'customStrings'
+  | 'ruderSpacing'
+  | 'spacingStrings'
+  | 'glyphGrid'
+  | 'paragraphs'
+  | 'headlines'
+  | 'familyOverview'
+  | 'punctuations'
+  | 'specimen'
+  | 'otFeatures';
 
 export type CanvasTool = 'cursor' | 'type' | 'draw' | 'notes';
 

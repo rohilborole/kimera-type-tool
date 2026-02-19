@@ -1,4 +1,5 @@
-import type { ActiveTab, SpecimenBlockType } from '../types';
+import type { ActiveTab, SpecimenBlockType, GlyphInfo } from '../types';
+import { MissingGlyphText } from './MissingGlyphText';
 import {
   PANGRAMS,
   ADHESION_GRID,
@@ -38,19 +39,7 @@ const ROW = 'flex gap-4 items-start';
 
 const TAB_TO_BLOCKS: Record<ActiveTab, SpecimenBlockType[] | 'ALL'> = {
   ALL: 'ALL',
-  HEADLINES: ['HERO', 'HEADLINES'],
-  TEXT: ['TEXT'],
-  ADHESION: ['ADHESION', 'KERN'],
-  'A-Z': ['A-Z'],
-  WORDS: ['WORDS'],
-  CAPS: ['CAPS'],
-  SPACING: ['SPACING'],
-  LAYOUT: ['LAYOUT'],
-  LETTERING: ['LETTERING'],
-  KERN: ['ADHESION', 'KERN'],
-  HINTING: ['HINTING'],
-  LATIN: ['TEXT', 'A-Z'],
-  WORLD: ['WORLD'],
+  CUSTOM: 'ALL', // same as ALL for now
   GLYPH_INSPECTOR: [],
   TYPE_PROOFING: [],
 };
@@ -61,6 +50,8 @@ interface SpecimenBlocksProps {
   isPrinting: boolean;
   /** When set, only these block types are rendered (for page-based view). */
   blockTypesToShow?: SpecimenBlockType[];
+  /** Glyphs for missing/empty replacement (red circle). When empty, no replacement. */
+  glyphs?: GlyphInfo[];
 }
 
 export function SpecimenBlocks({
@@ -68,6 +59,7 @@ export function SpecimenBlocks({
   specimenStyle,
   isPrinting,
   blockTypesToShow,
+  glyphs = [],
 }: SpecimenBlocksProps) {
   const which = TAB_TO_BLOCKS[activeTab];
   const show = (type: SpecimenBlockType) =>
@@ -89,7 +81,7 @@ export function SpecimenBlocks({
       )}
       {show('TEXT') && (
         <SpecimenBlock type="TEXT" isPrinting={isPrinting}>
-          <TextBlock style={specimenStyle} />
+          <TextBlock style={specimenStyle} glyphs={glyphs} />
         </SpecimenBlock>
       )}
       {show('ADHESION') && (
@@ -187,7 +179,15 @@ function HeadlinesBlock({ style }: { style: React.CSSProperties }) {
 
 const WATERFALL_SIZES_PT = [27, 22, 17, 13, 11, 10, 9, 7.5, 6];
 
-function TextBlock({ style }: { style: React.CSSProperties }) {
+function TextBlock({ style, glyphs }: { style: React.CSSProperties; glyphs: GlyphInfo[] }) {
+  const renderText = (text: string, textStyle: React.CSSProperties, className: string) =>
+    glyphs.length > 0 ? (
+      <MissingGlyphText text={text} style={textStyle} glyphs={glyphs} as="p" className={className} />
+    ) : (
+      <p style={textStyle} className={className}>
+        {text}
+      </p>
+    );
   return (
     <div className="space-y-6">
       <div>
@@ -196,12 +196,11 @@ function TextBlock({ style }: { style: React.CSSProperties }) {
           {WATERFALL_SIZES_PT.map((pt) => (
             <div key={pt} className={`${ROW} border-b border-current/10 pb-4 last:border-0`}>
               <span className={SIZE_LABEL}>{pt} pt</span>
-              <p
-                style={{ ...style, fontSize: `${pt}pt` }}
-                className="min-w-0 flex-1 max-w-prose leading-relaxed"
-              >
-                {PARAGRAPHS.germanSpecimen}
-              </p>
+              {renderText(
+                PARAGRAPHS.germanSpecimen,
+                { ...style, fontSize: `${pt}pt` },
+                'min-w-0 flex-1 max-w-prose leading-relaxed'
+              )}
             </div>
           ))}
         </div>
@@ -217,9 +216,7 @@ function TextBlock({ style }: { style: React.CSSProperties }) {
           ].map(({ size, text }, i) => (
             <div key={i} className={`${ROW} border-b border-current/10 pb-6 last:border-0`}>
               <span className={SIZE_LABEL}>{size} px</span>
-              <p style={{ ...style, fontSize: size }} className="min-w-0 flex-1 max-w-prose leading-relaxed">
-                {text}
-              </p>
+              {renderText(text, { ...style, fontSize: size }, 'min-w-0 flex-1 max-w-prose leading-relaxed')}
             </div>
           ))}
         </div>

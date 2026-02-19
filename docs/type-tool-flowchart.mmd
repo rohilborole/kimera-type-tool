@@ -1,0 +1,133 @@
+flowchart TB
+  subgraph appEntry [App Entry]
+    User([User])
+    Sidebar[Sidebar]
+    Canvas[Canvas]
+    TabBar[Tab Bar]
+    User --> Sidebar
+    User --> Canvas
+    TabBar --> Canvas
+  end
+
+  subgraph tabTypes [Tab Types]
+    AllTab[All]
+    CustomTab[Custom]
+    MainTab[Main]
+    VarTab[Variable]
+    CustomN[Custom tabs]
+    PlusBtn[Plus Add Tab]
+  end
+
+  subgraph allTabContent [All Tab]
+    AllScroll[Single scroll all blocks]
+    PerFontOrder[Per font in upload order]
+    NoPageLabels[No page labels]
+  end
+
+  subgraph customTabContent [Custom Tab]
+    UserDefBlocks[User-defined blocks]
+    FromProofSets[Content from proofing sets]
+  end
+
+  subgraph mainTabContent [Main Tab]
+    MainBlocks[Blocks title typesetting string]
+    ElevenSets[11 proofing sets]
+    MainFontPanel[Same panel for this main page]
+    MainFontSelect[Choose 1 or multiple fonts from uploaded]
+    MainFontOrder[Drag to reorder for this main page only]
+    MainFontPanel --> MainFontSelect
+    MainFontPanel --> MainFontOrder
+  end
+
+  subgraph variableTabContent [Variable Tab]
+    TextPresets[Text presets]
+    AxisSliders[Axis sliders]
+    AnimPresets[Animation presets]
+  end
+
+  subgraph customNContent [Custom 1 2 etc]
+    CustomBlockList[Own block list]
+    AddViaPlus[Added via Plus]
+  end
+
+  subgraph blockModel [Blocks]
+    TextBlock[Text block]
+    CompBlock[Comparison block 2-4 columns]
+    SettingsBtn[Settings icon]
+    FloatPanel[Floating panel font weight size leading alignment]
+    SettingsBtn --> FloatPanel
+  end
+
+  subgraph proofingSets [11 Proofing Sets]
+    S1[Basic kerning]
+    S2[Custom strings]
+    S3[Ruder spacing]
+    S4[Spacing strings]
+    S5[Glyph grid]
+    S6[Paragraphs]
+    S7[Headlines]
+    S8[Family overview]
+    S9[Punctuations]
+    S10[Specimen]
+    S11[OT features]
+  end
+
+  subgraph fontMgmt [Font Management]
+    Upload[Upload fonts]
+    FontEntries[fontEntries global list]
+    Max10[Max 10 fonts]
+    GlobalOrder[Global default order]
+    PerMainOverride[Per main page panel overrides selection and order]
+    FontEntries --> GlobalOrder
+  end
+
+  subgraph glyphReplacement [Missing Empty Glyphs]
+    CharCheck[Per-char glyph check]
+    RedCircle[Red circle replacement]
+    InSpecimen[Specimen and Type Proofing]
+  end
+
+  subgraph canvasSpecs [Canvas]
+    A3Default[A3 default A4 toggle]
+    Orient[Landscape Portrait]
+    OneToOne[Scale 1 to 1 mm pt for print]
+    DynamicFit[Dynamic page fit]
+  end
+
+  subgraph exportFlow [Export]
+    PerTabExport[Export PDF per tab]
+    WYSIWYG[Preview matches PDF]
+  end
+
+  subgraph implPhases [Implementation Order]
+    P1[Phase 1 All and Custom kill pagination]
+    P2[Phase 2 Red circle glyphs]
+    P3[Phase 3 Multi-font and order]
+    P6[Phase 6 Remove toolbar]
+    P7[Phase 7 A4 A3 1 to 1 dynamic fit]
+    P4[Phase 4 Tabs blocks comparison]
+    P5[Phase 5 Variable playground]
+    P8[Phase 8 Per-tab PDF]
+    P1 --> P2
+    P1 --> P3
+    P1 --> P6
+    P1 --> P7
+    P7 --> P4
+    P4 --> P5
+    P4 --> P8
+  end
+
+  AllTab --> AllScroll
+  MainTab --> MainBlocks
+  MainBlocks --> blockModel
+  blockModel --> proofingSets
+  VarTab --> TextPresets
+  CustomN --> CustomBlockList
+  MainTab --> MainFontPanel
+  Sidebar --> Upload
+  Upload --> FontEntries
+  FontEntries --> MainFontSelect
+  CharCheck --> RedCircle
+  RedCircle --> InSpecimen
+  Canvas --> canvasSpecs
+  PerTabExport --> WYSIWYG
